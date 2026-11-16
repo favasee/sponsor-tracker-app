@@ -1,0 +1,11 @@
+
+<svg width="200" height="200" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Top-Left (Slate Turquoise) -->
+  <polygon points="12,50 50,12 60,22 34,48 24,50" fill="#46788d" />
+  <!-- Top-Right (Sky Blue) -->
+  <polygon points="50,12 88,50 78,60 52,34 50,24" fill="#38bdf8" />
+  <!-- Bottom-Right (Royal Blue) -->
+  <polygon points="88,50 50,88 40,78 66,52 76,50" fill="#0284c7" />
+  <!-- Bottom-Left (Emerald Teal) -->
+  <polygon points="50,88 12,50 22,40 48,66 50,76" fill="#00a896" />
+</svg>

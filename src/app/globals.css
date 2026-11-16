@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+:root {
+  --background: #08090C;
+  --foreground: #F8FAFC;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+body {
+  background-color: #08090C;
+  color: #F8FAFC;
+  font-family: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   PRINT STYLESHEET: STRICT A5 SINGLE-PAGE RECEIPT (NO BLACK RECTANGLE)
+   Prevents background webpage from printing or showing dark rectangle below.
+   Guarantees strictly 1 single page containing only the classic A5 receipt card.
+   ========================================================================== */
+@media print {
+  @page {
+    size: A5 portrait;
+    margin: 5mm;
+  }
+
+  /* Suppress all dark backgrounds, shadows, and canvas confetti completely */
+  html,
+  body,
+  .min-h-screen,
+  #__next,
+  #printable-receipt-modal-backdrop,
+  #printable-receipt-modal-container {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Completely suppress all background app layout elements, forms, chrome, and confetti */
+  header,
+  nav,
+  main,
+  footer,
+  button,
+  canvas,
+  .print-hide,
+  div[data-nextjs-toast],
+  #__next-build-watcher {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset min-h-screen and root dark wrappers so no black rectangle paints below */
+  .min-h-screen,
+  body > div,
+  #__next {
+    min-height: 0 !important;
+    height: auto !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+  }
+
+  /* Modal backdrops become pure white static container */
+  #printable-receipt-modal-backdrop {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  #printable-receipt-modal-container {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    color: #0f172a !important;
+  }
+
+  #printable-receipt-modal-container > div {
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  /* The Receipt Card: Sized strictly for A5 portrait (148mm x 210mm) */
+  #printable-receipt-card {
+    position: relative !important;
+    display: block !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 136mm !important; /* Perfect fit on A5 portrait */
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-receipt-card * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
