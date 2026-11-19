@@ -390,20 +390,20 @@ export function DonorTemplatesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="bg-[#0f1219] rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/15 text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
+      <div className="bg-[#0f1219] rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[96vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/15 text-white">
         
         {/* Modal Header */}
-        <div className="sticky top-0 bg-[#0f1219]/95 backdrop-blur-xl px-6 py-5 border-b border-white/10 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center font-bold">
-              <Bookmark className="w-5 h-5" />
+        <div className="sticky top-0 bg-[#0f1219]/95 backdrop-blur-xl px-4 sm:px-6 py-3.5 sm:py-5 border-b border-white/10 flex items-center justify-between gap-3 z-10">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center font-bold shrink-0">
+              <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="text-lg font-black text-white">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-black text-white truncate">
                 Recurring Donors & Groups
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
                 1-Click individual payments & corporate group template management
               </p>
             </div>
@@ -411,23 +411,24 @@ export function DonorTemplatesModal({
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+            aria-label="Close modal"
+            className="w-9 h-9 min-h-[38px] min-w-[38px] rounded-xl bg-white/10 hover:bg-rose-500/25 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition active:scale-95 cursor-pointer shrink-0 ml-auto"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Quick Pay Success Alert Banner */}
         {quickPaySuccess && (
-          <div className="mx-6 mt-4 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <div className="mx-4 sm:mx-6 mt-4 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{quickPaySuccess}</span>
           </div>
         )}
 
         {/* Tab Toggle: Individual vs Groups */}
-        <div className="px-6 pt-4">
-          <div className="flex items-center gap-2 p-1 rounded-2xl bg-white/[0.04] border border-white/10 w-fit">
+        <div className="px-4 sm:px-6 pt-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 p-1 rounded-2xl bg-white/[0.04] border border-white/10 w-full sm:w-fit">
             <button
               onClick={() => {
                 setActiveTab('individual');

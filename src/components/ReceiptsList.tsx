@@ -978,26 +978,27 @@ export function ReceiptsList({
 
       {/* Import CSV / TSV Dialog Modal */}
       {isImportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="bg-[#11141c] rounded-3xl max-w-xl w-full p-6 sm:p-7 border border-white/15 shadow-2xl space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="bg-[#11141c] rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-7 border border-white/15 shadow-2xl space-y-4 sm:space-y-5 max-h-[96vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
                   <Upload className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="text-base font-black text-white">Import Donation Receipts</h3>
-                  <p className="text-[11px] text-slate-400">
-                    Supports CSV, TSV (Excel copy-paste), or text files. Merges safely with existing data.
+                <div className="min-w-0">
+                  <h3 className="text-base font-black text-white truncate">Import Donation Receipts</h3>
+                  <p className="text-[11px] text-slate-400 truncate">
+                    Supports CSV, TSV (Excel copy-paste), or text files.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsImportModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                aria-label="Close modal"
+                className="w-9 h-9 min-h-[38px] min-w-[38px] rounded-xl bg-white/10 hover:bg-rose-500/25 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition active:scale-95 cursor-pointer shrink-0 ml-auto"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 

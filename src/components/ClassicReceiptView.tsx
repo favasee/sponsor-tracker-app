@@ -2,7 +2,19 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { ClassicReceipt } from '@/types';
-import { Download, Printer, MessageSquare, Mail, X, Check, ShieldCheck, Sparkles } from 'lucide-react';
+import { 
+  Download, 
+  Printer, 
+  MessageSquare, 
+  Mail, 
+  X, 
+  Check, 
+  ShieldCheck, 
+  Sparkles,
+  Edit3,
+  ZoomIn,
+  Smartphone
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadHeaderSettings, OrganizationHeaderSettings } from '@/lib/settingsStorage';
@@ -57,6 +69,37 @@ export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }
   const [header, setHeader] = useState<OrganizationHeaderSettings>(() => loadHeaderSettings());
   // Template Style: 'modern' (Image 2 - default) vs 'classic' (Image 1 - 80G border)
   const [templateStyle, setTemplateStyle] = useState<'modern' | 'classic'>('modern');
+
+  // Dynamic scale state to auto-fit mobile phone screens 100% without horizontal cutoff
+  const [scale, setScale] = useState(1);
+  const [zoomMode, setZoomMode] = useState<'fit' | 'actual'>('fit');
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (previewContainerRef.current) {
+        const containerWidth = previewContainerRef.current.clientWidth;
+        // On small screens leave 16px horizontal breathing room
+        const horizontalPadding = window.innerWidth < 640 ? 16 : 48;
+        const availableWidth = Math.max(260, containerWidth - horizontalPadding);
+        if (availableWidth < 560 && zoomMode === 'fit') {
+          setScale(availableWidth / 560);
+        } else if (zoomMode === 'actual') {
+          setScale(1);
+        } else {
+          setScale(1);
+        }
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    const timer = setTimeout(updateScale, 100);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      clearTimeout(timer);
+    };
+  }, [receipt, templateStyle, zoomMode]);
 
   // Reload header settings whenever receipt modal opens
   useEffect(() => {
@@ -129,6 +172,24 @@ ${header.trustName}`);
           const card = clonedDoc.getElementById('printable-receipt-card');
           if (!card) return;
           card.style.boxShadow = 'none';
+          card.style.transform = 'none';
+          card.style.margin = '0 auto';
+          card.style.width = '560px';
+          card.style.height = '794px';
+          card.style.minWidth = '560px';
+          card.style.minHeight = '794px';
+          card.style.maxWidth = '560px';
+          card.style.maxHeight = '794px';
+
+          let p = card.parentElement;
+          while (p && p !== clonedDoc.body) {
+            p.style.transform = 'none';
+            p.style.overflow = 'visible';
+            p.style.width = 'auto';
+            p.style.height = 'auto';
+            p.style.margin = '0';
+            p = p.parentElement;
+          }
 
           // Helper to sanitize modern color formats (lab/oklch) that html2canvas cannot parse
           const dummyCanvas = clonedDoc.createElement('canvas');
@@ -233,141 +294,184 @@ ${header.trustName}`);
   return (
     <div 
       id="printable-receipt-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
     >
       <div 
         id="printable-receipt-modal-container"
-        className="bg-[#0f1219] rounded-3xl max-w-2xl w-full shadow-2xl border border-white/15 overflow-hidden my-4 text-white"
+        className="bg-[#0f1219] rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl border border-white/15 overflow-hidden my-auto text-white flex flex-col max-h-[96vh]"
       >
         
         {/* Top Control Bar (Strictly hidden on print) */}
-        <div className="bg-[#141822] text-white px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 print-hide">
-          <div className="flex items-center gap-2">
-            <span className="font-mono tabular-nums text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-xl shadow-xs">
-              {displayReceiptNo}
-            </span>
-            {receipt.isEdited && (
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
-                Revised
+        <div className="bg-[#141822] text-white p-3 sm:px-6 sm:py-3.5 border-b border-white/10 print-hide space-y-2.5">
+          
+          {/* Top Row: Serial Badge, Template Switcher, and Pinned Close Button */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap">
+              <span className="font-mono tabular-nums text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-xl shadow-xs shrink-0">
+                {displayReceiptNo}
               </span>
-            )}
-            
-            {/* Design Style Selector */}
-            <div className="hidden sm:inline-flex items-center bg-white/10 p-0.5 rounded-xl border border-white/10 text-[11px] font-bold ml-2">
-              <button
-                type="button"
-                onClick={() => setTemplateStyle('modern')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  templateStyle === 'modern'
-                    ? 'bg-[#00a896] text-white shadow-xs'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-                title="Exact Image 2 Reference Design"
-              >
-                Thaiba Modern
-              </button>
-              <button
-                type="button"
-                onClick={() => setTemplateStyle('classic')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  templateStyle === 'classic'
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-                title="Classic 80G Formal Border Design"
-              >
-                Classic 80G
-              </button>
+              {receipt.isEdited && (
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold shrink-0">
+                  Revised
+                </span>
+              )}
+              
+              {/* Design Style Selector */}
+              <div className="inline-flex items-center bg-white/10 p-0.5 rounded-xl border border-white/10 text-[10px] sm:text-[11px] font-bold shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle('modern')}
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    templateStyle === 'modern'
+                      ? 'bg-[#00a896] text-white shadow-xs'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Exact Modern Reference Design"
+                >
+                  Thaiba Modern
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle('classic')}
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    templateStyle === 'classic'
+                      ? 'bg-amber-500 text-slate-950 shadow-xs'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Classic 80G Formal Border Design"
+                >
+                  Classic 80G
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {onEdit && (
-              <button
-                onClick={() => onEdit(receipt)}
-                aria-label={`Edit receipt ${receipt.receiptNo}`}
-                className="px-3 py-1.5 min-h-[36px] rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer"
-              >
-                Edit
-              </button>
-            )}
-
-            {/* Download PDF button (saves strictly as single-page A5 PDF) */}
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isExporting}
-              aria-label={`Export A5 PDF for receipt ${receipt.receiptNo}`}
-              className="px-3.5 py-1.5 min-h-[36px] rounded-xl bg-gradient-to-r from-[#00a896] to-[#0284c7] hover:from-[#009688] hover:to-[#0369a1] text-white text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none cursor-pointer disabled:opacity-50"
-              title={`Download A5 PDF as ${receipt.receiptNo}.pdf`}
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{isExporting ? 'Exporting...' : 'Export PDF (A5)'}</span>
-            </button>
-
-            <button
-              onClick={handlePrint}
-              aria-label="Print receipt"
-              className="px-3 py-1.5 min-h-[36px] rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print</span>
-            </button>
-
-            {/* Email Dispatch button */}
-            <button
-              onClick={handleSendEmail}
-              aria-label={`Dispatch receipt ${receipt.receiptNo} via Email`}
-              className="px-3 py-1.5 min-h-[36px] rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer"
-              title="Dispatch via Email"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Email</span>
-            </button>
-
-            <button
-              onClick={handleSendWhatsApp}
-              aria-label={`Dispatch receipt ${receipt.receiptNo} via WhatsApp`}
-              className="px-3 py-1.5 min-h-[36px] rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none cursor-pointer"
-              title="Dispatch via WhatsApp"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </button>
-
+            {/* Pinned Close Button: ALWAYS visible, high contrast, top-right, minimum 40px touch target */}
             <button
               onClick={onClose}
               aria-label="Close receipt modal"
-              className="w-9 h-9 min-h-[36px] min-w-[36px] rounded-xl bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer"
+              className="w-9 h-9 min-h-[38px] min-w-[38px] rounded-xl bg-white/10 hover:bg-rose-500/25 text-slate-300 hover:text-rose-200 border border-white/15 hover:border-rose-500/40 flex items-center justify-center transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:outline-none cursor-pointer shrink-0 ml-auto"
+              title="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-        </div>
 
-        {/* Small screen template switcher */}
-        <div className="sm:hidden px-4 py-2 bg-[#121620] border-b border-white/10 flex items-center justify-center gap-2 print-hide">
-          <button
-            type="button"
-            onClick={() => setTemplateStyle('modern')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              templateStyle === 'modern' ? 'bg-[#00a896] text-white' : 'text-slate-400'
-            }`}
-          >
-            Thaiba Modern (Img 2)
-          </button>
-          <button
-            type="button"
-            onClick={() => setTemplateStyle('classic')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              templateStyle === 'classic' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
-            }`}
-          >
-            Classic 80G (Img 1)
-          </button>
+          {/* Action Buttons Row */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 pt-1 sm:pt-2 sm:border-t sm:border-white/[0.06]">
+            
+            {/* Primary Download PDF Button */}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isExporting}
+              aria-label={`Export A5 PDF for receipt ${receipt.receiptNo}`}
+              className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-[#00a896] to-[#0284c7] hover:from-[#009688] hover:to-[#0369a1] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none cursor-pointer disabled:opacity-50"
+              title={`Download A5 PDF as ${displayReceiptNo.replace('-', '')}.pdf`}
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              <span>{isExporting ? 'Exporting...' : 'Export PDF (A5)'}</span>
+            </button>
+
+            {/* WhatsApp Share Button */}
+            <button
+              onClick={handleSendWhatsApp}
+              aria-label={`Dispatch receipt ${receipt.receiptNo} via WhatsApp`}
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none cursor-pointer"
+              title="Dispatch via WhatsApp"
+            >
+              <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+              <span className="inline">WhatsApp</span>
+            </button>
+
+            {/* Email Dispatch Button */}
+            <button
+              onClick={handleSendEmail}
+              aria-label={`Dispatch receipt ${receipt.receiptNo} via Email`}
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer"
+              title="Dispatch via Email"
+            >
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span className="inline">Email</span>
+            </button>
+
+            {/* Print Button */}
+            <button
+              onClick={handlePrint}
+              aria-label="Print receipt"
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer"
+              title="Print receipt"
+            >
+              <Printer className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Print</span>
+            </button>
+
+            {/* Edit Button (if onEdit callback provided) */}
+            {onEdit && (
+              <button
+                onClick={() => onEdit(receipt)}
+                aria-label={`Edit receipt ${receipt.receiptNo}`}
+                className="px-3 py-2 min-h-[40px] rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer"
+                title="Edit receipt"
+              >
+                <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
+
+          </div>
+
         </div>
 
         {/* ================= RECEIPT CANVAS ================= */}
-        <div className="p-3 sm:p-6 bg-slate-200/90 flex justify-center overflow-x-auto">
+        <div 
+          ref={previewContainerRef}
+          className="p-2 sm:p-6 bg-slate-300/85 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden min-h-[380px] flex-1"
+        >
+          {/* Mobile Auto-fit Status & Zoom Toggle */}
+          <div className="sm:hidden mb-2.5 flex items-center justify-between w-full max-w-[560px] px-1 text-[11px] font-bold text-slate-700 select-none">
+            <div className="flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5 text-teal-700" />
+              <span>{zoomMode === 'fit' ? 'Auto-fitted to Phone Screen' : 'Zoom 100% (Scroll Mode)'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setZoomMode(zoomMode === 'fit' ? 'actual' : 'fit')}
+              className="px-2.5 py-1 rounded-lg bg-black/10 hover:bg-black/20 text-slate-800 text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer"
+            >
+              {zoomMode === 'fit' ? (
+                <>
+                  <ZoomIn className="w-3 h-3" />
+                  <span>Zoom 100%</span>
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-3 h-3" />
+                  <span>Fit Phone</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Scaled Card Viewport Container */}
+          <div 
+            className="w-full flex justify-center items-center overflow-x-auto"
+            style={{
+              height: zoomMode === 'fit' && scale < 1
+                ? templateStyle === 'modern' ? `${Math.round(794 * scale)}px` : `${Math.round(650 * scale)}px`
+                : 'auto',
+            }}
+          >
+            <div
+              style={{
+                transform: zoomMode === 'fit' && scale < 1 ? `scale(${scale})` : 'none',
+                transformOrigin: 'top center',
+                width: '560px',
+                height: templateStyle === 'modern' ? '794px' : undefined,
+                flexShrink: 0,
+                marginBottom: zoomMode === 'fit' && scale < 1
+                  ? `${Math.round((templateStyle === 'modern' ? 794 : 650) * (scale - 1))}px`
+                  : 0,
+              }}
+            >
 
           {/* TEMPLATE A: THAIBA MODERN DESIGN (EXACT REFERENCE IMAGE 2 & PPTX) */}
           {templateStyle === 'modern' && (
@@ -589,12 +693,16 @@ ${header.trustName}`);
             <div
               id="printable-receipt-card"
               ref={receiptRef}
-              className="w-full max-w-[560px] p-6 sm:p-8 font-serif leading-relaxed relative bg-white"
+              className="p-6 sm:p-8 font-serif leading-relaxed relative bg-white mx-auto shrink-0"
               style={{ 
+                width: '560px',
+                minWidth: '560px',
+                maxWidth: '560px',
                 minHeight: '520px',
                 backgroundColor: '#ffffff',
                 color: '#0f172a',
-                border: '4px double #0f172a'
+                border: '4px double #0f172a',
+                boxSizing: 'border-box'
               }}
             >
               {/* Corner Decorative Stars */}
@@ -730,6 +838,9 @@ ${header.trustName}`);
 
             </div>
           )}
+
+          </div>
+        </div>
 
         </div>
 

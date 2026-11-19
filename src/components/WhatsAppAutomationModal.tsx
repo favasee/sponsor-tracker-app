@@ -94,25 +94,25 @@ export function WhatsAppAutomationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="bg-[#0f1219] rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-white/15 text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
+      <div className="bg-[#0f1219] rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[96vh] sm:max-h-[92vh] overflow-y-auto shadow-2xl border border-white/15 text-white">
         
         {/* Modal Header */}
-        <div className="sticky top-0 bg-[#0f1219]/95 backdrop-blur-xl px-6 py-5 border-b border-white/10 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5" />
+        <div className="sticky top-0 bg-[#0f1219]/95 backdrop-blur-xl px-4 sm:px-6 py-3.5 sm:py-5 border-b border-white/10 flex items-center justify-between gap-3 z-10">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-black text-white truncate">
                   Automatic WhatsApp Sending Webhook
                 </h3>
-                <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
                   Future Ready Placeholder
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
                 Configure webhook endpoints, Meta Cloud API tokens, and automatic dispatch hooks
               </p>
             </div>
@@ -120,14 +120,15 @@ export function WhatsAppAutomationModal({
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+            aria-label="Close modal"
+            className="w-9 h-9 min-h-[38px] min-w-[38px] rounded-xl bg-white/10 hover:bg-rose-500/25 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition active:scale-95 cursor-pointer shrink-0 ml-auto"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSave} className="p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleSave} className="p-4 sm:p-8 space-y-5 sm:space-y-6">
           
           {/* Main Activation Toggle */}
           <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">

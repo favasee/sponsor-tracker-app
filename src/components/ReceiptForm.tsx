@@ -431,12 +431,12 @@ export function ReceiptForm({
 
       {/* Top Mode Switcher: Individual vs Group Submission */}
       {!receiptToEdit && (
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 w-fit backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 w-full sm:w-fit backdrop-blur-md">
           <button
             type="button"
             onClick={() => setSubmissionMode('individual')}
             aria-pressed={submissionMode === 'individual'}
-            className={`flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer ${
               submissionMode === 'individual'
                 ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-md'
                 : 'text-slate-400 hover:text-white'
@@ -450,7 +450,7 @@ export function ReceiptForm({
             type="button"
             onClick={() => setSubmissionMode('group')}
             aria-pressed={submissionMode === 'group'}
-            className={`flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none cursor-pointer ${
               submissionMode === 'group'
                 ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-md'
                 : 'text-slate-400 hover:text-white'
