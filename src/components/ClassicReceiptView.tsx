@@ -191,6 +191,65 @@ ${header.trustName}`);
             p = p.parentElement;
           }
 
+          // Enforce exact AMOUNT capsule metrics in html2canvas to guarantee identical concentric alignment
+          const amountRow = card.querySelector('#receipt-amount-row') as HTMLElement | null;
+          if (amountRow) {
+            amountRow.style.display = 'flex';
+            amountRow.style.alignItems = 'center';
+            amountRow.style.paddingTop = '2px';
+          }
+          const amountLabel = card.querySelector('#receipt-amount-label') as HTMLElement | null;
+          if (amountLabel) {
+            amountLabel.style.height = '32px';
+            amountLabel.style.lineHeight = '32px';
+            amountLabel.style.marginRight = '12px';
+            amountLabel.style.display = 'inline-flex';
+            amountLabel.style.alignItems = 'center';
+          }
+          const amountContainer = card.querySelector('#receipt-amount-badge-container') as HTMLElement | null;
+          if (amountContainer) {
+            amountContainer.style.height = '32px';
+            amountContainer.style.minHeight = '32px';
+            amountContainer.style.maxHeight = '32px';
+            amountContainer.style.display = 'inline-flex';
+            amountContainer.style.alignItems = 'center';
+            amountContainer.style.padding = '2px';
+            amountContainer.style.borderRadius = '16px';
+            amountContainer.style.backgroundColor = '#EEEEEE';
+            amountContainer.style.boxSizing = 'border-box';
+          }
+          const currencyBadge = card.querySelector('#receipt-currency-badge') as HTMLElement | null;
+          if (currencyBadge) {
+            currencyBadge.style.height = '28px';
+            currencyBadge.style.minHeight = '28px';
+            currencyBadge.style.maxHeight = '28px';
+            currencyBadge.style.lineHeight = '28px';
+            currencyBadge.style.borderRadius = '14px';
+            currencyBadge.style.display = 'inline-flex';
+            currencyBadge.style.alignItems = 'center';
+            currencyBadge.style.justifyContent = 'center';
+            currencyBadge.style.backgroundColor = '#0075BF';
+            currencyBadge.style.color = '#FFFFFF';
+            currencyBadge.style.paddingLeft = '14px';
+            currencyBadge.style.paddingRight = '14px';
+            currencyBadge.style.boxSizing = 'border-box';
+            currencyBadge.style.verticalAlign = 'middle';
+          }
+          const amountValue = card.querySelector('#receipt-amount-value') as HTMLElement | null;
+          if (amountValue) {
+            amountValue.style.height = '28px';
+            amountValue.style.minHeight = '28px';
+            amountValue.style.maxHeight = '28px';
+            amountValue.style.lineHeight = '28px';
+            amountValue.style.display = 'inline-flex';
+            amountValue.style.alignItems = 'center';
+            amountValue.style.color = '#00AA9D';
+            amountValue.style.paddingLeft = '8px';
+            amountValue.style.paddingRight = '12px';
+            amountValue.style.boxSizing = 'border-box';
+            amountValue.style.verticalAlign = 'middle';
+          }
+
           // Helper to sanitize modern color formats (lab/oklch) that html2canvas cannot parse
           const dummyCanvas = clonedDoc.createElement('canvas');
           dummyCanvas.width = 1;
@@ -453,25 +512,35 @@ ${header.trustName}`);
 
           {/* Scaled Card Viewport Container */}
           <div 
-            className="w-full flex justify-center items-center overflow-x-auto"
+            className="w-full flex justify-center items-start"
             style={{
-              height: zoomMode === 'fit' && scale < 1
-                ? templateStyle === 'modern' ? `${Math.round(794 * scale)}px` : `${Math.round(650 * scale)}px`
-                : 'auto',
+              overflowX: zoomMode === 'actual' ? 'auto' : 'hidden',
+              overflowY: 'visible',
             }}
           >
-            <div
+            <div 
               style={{
-                transform: zoomMode === 'fit' && scale < 1 ? `scale(${scale})` : 'none',
-                transformOrigin: 'top center',
-                width: '560px',
-                height: templateStyle === 'modern' ? '794px' : undefined,
+                width: zoomMode === 'fit' && scale < 1 ? `${Math.round(560 * scale)}px` : '560px',
+                height: zoomMode === 'fit' && scale < 1 
+                  ? `${Math.round((templateStyle === 'modern' ? 794 : 650) * scale)}px` 
+                  : templateStyle === 'modern' ? '794px' : 'auto',
+                position: 'relative',
+                overflow: 'hidden',
                 flexShrink: 0,
-                marginBottom: zoomMode === 'fit' && scale < 1
-                  ? `${Math.round((templateStyle === 'modern' ? 794 : 650) * (scale - 1))}px`
-                  : 0,
+                margin: '0 auto',
               }}
             >
+              <div
+                style={{
+                  transform: zoomMode === 'fit' && scale < 1 ? `scale(${scale})` : 'none',
+                  transformOrigin: 'top left',
+                  width: '560px',
+                  height: templateStyle === 'modern' ? '794px' : undefined,
+                  position: zoomMode === 'fit' && scale < 1 ? 'absolute' : 'relative',
+                  top: 0,
+                  left: 0,
+                }}
+              >
 
           {/* TEMPLATE A: THAIBA MODERN DESIGN (EXACT REFERENCE IMAGE 2 & PPTX) */}
           {templateStyle === 'modern' && (
@@ -595,27 +664,87 @@ ${header.trustName}`);
                     </span>
                   </div>
 
-                  {/* AMOUNT Section (Concentric rounded rectangles matching user request) */}
-                  <div className="flex items-center gap-3 pt-0.5">
-                    <span className="text-[12px] font-bold tracking-wide text-[#000000]">AMOUNT :</span>
-                    <div 
-                      className="inline-flex items-center rounded-[12px] p-[2px] gap-2.5 max-w-full overflow-hidden"
-                      style={{ backgroundColor: '#EEEEEE' }}
+                  {/* AMOUNT Section (Concentric rounded capsules with locked pixel metrics) */}
+                  <div 
+                    id="receipt-amount-row"
+                    className="flex items-center"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      paddingTop: '2px',
+                    }}
+                  >
+                    <span 
+                      id="receipt-amount-label"
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        letterSpacing: '0.025em',
+                        color: '#000000',
+                        marginRight: '12px',
+                        height: '32px',
+                        lineHeight: '32px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
                     >
-                      {/* Blue Currency Badge - Concentric rounded rectangle with little gray border */}
+                      AMOUNT :
+                    </span>
+                    
+                    <div 
+                      id="receipt-amount-badge-container"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        height: '32px',
+                        backgroundColor: '#EEEEEE',
+                        borderRadius: '16px',
+                        padding: '2px',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {/* Blue Currency Badge - Exactly 28px height, 14px radius (concentric with 16px - 2px), zero vertical drift */}
                       <div 
-                        className="text-white text-xs font-black px-4 py-1.5 rounded-[10px] tracking-wider whitespace-nowrap shrink-0 flex items-center justify-center shadow-xs"
-                        style={{ backgroundColor: '#0075BF' }}
+                        id="receipt-currency-badge"
+                        style={{
+                          height: '28px',
+                          lineHeight: '28px',
+                          backgroundColor: '#0075BF',
+                          color: '#FFFFFF',
+                          fontSize: '12px',
+                          fontWeight: 900,
+                          letterSpacing: '0.05em',
+                          paddingLeft: '14px',
+                          paddingRight: '14px',
+                          borderRadius: '14px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxSizing: 'border-box',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
                       >
                         {displayCurrency}
                       </div>
+
+                      {/* Numeric Amount - Tightly hugged by the gray pill without large right void */}
                       <div 
-                        className={`font-black pr-4 py-0.5 tracking-tight flex items-center ${
-                          displayAmount.length > 8 
-                            ? 'text-lg' 
-                            : 'text-[22px]'
-                        }`}
-                        style={{ color: '#00AA9D' }}
+                        id="receipt-amount-value"
+                        style={{
+                          height: '28px',
+                          lineHeight: '28px',
+                          fontSize: displayAmount.length > 8 ? '18px' : '21px',
+                          fontWeight: 900,
+                          letterSpacing: '-0.02em',
+                          color: '#00AA9D',
+                          paddingLeft: '8px',
+                          paddingRight: '12px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          boxSizing: 'border-box',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
                         {displayAmount}
                       </div>
@@ -839,8 +968,9 @@ ${header.trustName}`);
             </div>
           )}
 
+              </div>
+            </div>
           </div>
-        </div>
 
         </div>
 
