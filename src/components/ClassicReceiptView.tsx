@@ -572,7 +572,7 @@ ${header.trustName}`);
                     <img 
                       src="/receipt_assets/thaiba_logo.png" 
                       alt="Thaiba Heritage" 
-                      className="w-[84px] h-[84px] object-contain shrink-0"
+                      className="w-[62px] h-[62px] object-contain shrink-0"
                     />
 
                     {/* Organization Title Lines (Enlarged size matching reference) */}
@@ -763,7 +763,7 @@ ${header.trustName}`);
               {/* Bottom Pinned Block: Appreciation, President Seal/Signature Down, Green Line, and Website Footer */}
               <div className="mt-auto">
                 {/* Signatures & Appreciation Section */}
-                <div className="flex justify-between items-end pb-1.5">
+                <div className="flex justify-between items-center py-2">
                   {/* Left: Thank you! For your Donation */}
                   <div>
                     <h3 
@@ -773,32 +773,32 @@ ${header.trustName}`);
                       Thank you!
                     </h3>
                     <p 
-                      className="text-[11px] font-semibold mt-1 text-[#000000]"
+                      className="text-[11px] font-semibold mt-1.5 text-[#000000]"
                     >
                       For your Donation
                     </p>
                   </div>
 
-                  {/* Right: President + Authentic Circular Seal & Blue Signature (Shifted DOWN) */}
-                  <div className="text-right flex flex-col items-end">
+                  {/* Right: President + Authentic Circular Seal & Blue Signature (Side-Center Positioned) */}
+                  <div className="flex flex-col items-center mr-8 sm:mr-10">
                     <div 
-                      className="text-xs font-semibold mb-1 mr-10 text-[#000000]"
+                      className="text-xs font-semibold mb-1 text-[#000000] text-center"
                     >
                       {header.signatoryTitle || 'President:'}
                     </div>
-                    {/* Shifted seal & signature down closer to the teal line */}
-                    <div className="relative select-none pointer-events-none w-[125px] h-[105px] mt-0.5">
+                    {/* Centered seal and overlaid signature */}
+                    <div className="relative select-none pointer-events-none w-[115px] h-[100px] flex items-center justify-center">
                       {/* Official Circular Seal */}
                       <img
                         src="/receipt_assets/thaiba_seal.png"
                         alt="Official Trust Seal"
-                        className="absolute right-0 bottom-0 w-[105px] h-[105px] object-contain opacity-95"
+                        className="w-[100px] h-[100px] object-contain opacity-95"
                       />
                       {/* Official Calligraphic Signature Overlaid */}
                       <img
                         src="/receipt_assets/thaiba_signature.png"
                         alt="Authorized Signature"
-                        className="absolute -right-2 bottom-0 w-[125px] h-[90px] object-contain transform -rotate-3 pointer-events-none"
+                        className="absolute -top-1 w-[120px] h-[85px] object-contain transform -rotate-3 pointer-events-none"
                       />
                     </div>
                   </div>
