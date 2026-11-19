@@ -572,11 +572,11 @@ ${header.trustName}`);
                     <img 
                       src="/receipt_assets/thaiba_logo.png" 
                       alt="Thaiba Heritage" 
-                      className="w-[74px] h-[74px] object-contain shrink-0"
+                      className="w-[84px] h-[84px] object-contain shrink-0"
                     />
 
                     {/* Organization Title Lines (Enlarged size matching reference) */}
-                    <div className="mt-3 mb-1.5">
+                    <div className="mt-2.5 mb-1">
                       <h1 
                         className="text-[27px] sm:text-[29px] font-black uppercase tracking-tight leading-none"
                         style={{ color: '#0178C9' }}
@@ -593,7 +593,7 @@ ${header.trustName}`);
 
                     {/* Address & Contact Block */}
                     <div 
-                      className="text-[10px] leading-[1.35] font-semibold mt-2.5 space-y-0.5 text-[#000000]"
+                      className="text-[10px] leading-[1.35] font-semibold mt-2 space-y-0.5 text-[#000000]"
                     >
                       <p>{header.officeAddress || 'MAJHIKHANDA, TAPAN, DAKSHIN DINAJPUR'}</p>
                       <p>{header.officeAddressLine2 || 'WEST BENGAL - 733127'}</p>
@@ -620,12 +620,12 @@ ${header.trustName}`);
 
                 {/* Divider Line 1: Solid Teal */}
                 <div 
-                  className="my-4"
+                  className="my-3.5"
                   style={{ borderBottom: '2px solid #00AA9D' }}
                 />
 
                 {/* Particulars List */}
-                <div className="space-y-3.5 my-1 text-[11.5px] font-bold leading-normal text-[#000000]">
+                <div className="space-y-3 my-1 text-[11.5px] font-bold leading-normal text-[#000000]">
                   
                   {/* DATE */}
                   <div className="flex items-baseline gap-2">
@@ -755,16 +755,19 @@ ${header.trustName}`);
 
                 {/* Divider Line 2: Solid Teal */}
                 <div 
-                  className="my-4"
+                  className="my-3.5"
                   style={{ borderBottom: '2px solid #00AA9D' }}
                 />
+              </div>
 
+              {/* Bottom Pinned Block: Appreciation, President Seal/Signature Down, Green Line, and Website Footer */}
+              <div className="mt-auto">
                 {/* Signatures & Appreciation Section */}
-                <div className="flex justify-between items-end pt-1">
+                <div className="flex justify-between items-end pb-1.5">
                   {/* Left: Thank you! For your Donation */}
                   <div>
                     <h3 
-                      className="text-xl sm:text-2xl font-black leading-none"
+                      className="text-[22px] sm:text-[24px] font-black leading-none"
                       style={{ color: '#FE3844' }}
                     >
                       Thank you!
@@ -776,42 +779,43 @@ ${header.trustName}`);
                     </p>
                   </div>
 
-                  {/* Right: President + Authentic Circular Seal & Blue Signature */}
+                  {/* Right: President + Authentic Circular Seal & Blue Signature (Shifted DOWN) */}
                   <div className="text-right flex flex-col items-end">
                     <div 
-                      className="text-xs font-semibold mb-1 mr-14 text-[#000000]"
+                      className="text-xs font-semibold mb-1 mr-10 text-[#000000]"
                     >
                       {header.signatoryTitle || 'President:'}
                     </div>
-                    <div className="relative select-none pointer-events-none w-[125px] h-[110px]">
+                    {/* Shifted seal & signature down closer to the teal line */}
+                    <div className="relative select-none pointer-events-none w-[125px] h-[105px] mt-0.5">
                       {/* Official Circular Seal */}
                       <img
                         src="/receipt_assets/thaiba_seal.png"
                         alt="Official Trust Seal"
-                        className="absolute right-0 top-0 w-[110px] h-[110px] object-contain opacity-95"
+                        className="absolute right-0 bottom-0 w-[105px] h-[105px] object-contain opacity-95"
                       />
                       {/* Official Calligraphic Signature Overlaid */}
                       <img
                         src="/receipt_assets/thaiba_signature.png"
                         alt="Authorized Signature"
-                        className="absolute -right-2 top-1.5 w-[125px] h-[90px] object-contain transform -rotate-3 pointer-events-none"
+                        className="absolute -right-2 bottom-0 w-[125px] h-[90px] object-contain transform -rotate-3 pointer-events-none"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Divider Line 3: Solid Teal */}
+                {/* Divider Line 3: Solid Teal - strictly above www.thaibaheritage.com */}
                 <div 
-                  className="my-3.5"
+                  className="mt-1 mb-2.5"
                   style={{ borderBottom: '2px solid #00AA9D' }}
                 />
-              </div>
 
-              {/* Footer: Website URL */}
-              <div 
-                className="text-xs font-medium text-[#000000]"
-              >
-                {header.website || 'www.thaibaheritage.com'}
+                {/* Footer: Website URL */}
+                <div 
+                  className="text-xs font-medium text-[#000000] pb-0.5"
+                >
+                  {header.website || 'www.thaibaheritage.com'}
+                </div>
               </div>
 
             </div>
