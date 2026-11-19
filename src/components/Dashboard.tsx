@@ -14,14 +14,9 @@ import {
   Bookmark, 
   Settings as SettingsIcon,
   Sparkles,
-  ShieldCheck,
-  CreditCard,
-  Users,
-  Crown,
-  Shield
+  CreditCard
 } from 'lucide-react';
-import { ClassicReceipt, OWNER_EMAIL } from '@/types';
-import { useAuth } from '@/context/AuthContext';
+import { ClassicReceipt } from '@/types';
 import { CollectionsSummaryTable } from './CollectionsSummaryTable';
 import { formatDateDisplay } from './ReceiptsList';
 
@@ -31,7 +26,7 @@ interface DashboardProps {
   onNavigateToRegister: (filterPurpose?: string) => void;
   onViewReceipt: (receipt: ClassicReceipt) => void;
   onOpenTemplates?: () => void;
-  onOpenSettings?: (tab?: 'header' | 'purposes' | 'currency' | 'roles') => void;
+  onOpenSettings?: (tab?: 'header' | 'purposes' | 'currency') => void;
 }
 
 export function Dashboard({
@@ -42,16 +37,6 @@ export function Dashboard({
   onOpenTemplates,
   onOpenSettings,
 }: DashboardProps) {
-  const { user, registeredUsers, pendingRequests } = useAuth();
-
-  // Admin & Staff Governance Metrics
-  const adminUsers = useMemo(() => registeredUsers.filter((u) => u.role === 'admin'), [registeredUsers]);
-  const staffUsers = useMemo(() => registeredUsers.filter((u) => u.role === 'staff'), [registeredUsers]);
-  const ownerUsers = useMemo(
-    () => registeredUsers.filter((u) => u.isOwner || u.email.toLowerCase() === OWNER_EMAIL.toLowerCase()),
-    [registeredUsers]
-  );
-
   // 1. Overall Key Performance Indicators (KPIs)
   const analytics = useMemo(() => {
     const now = new Date();
@@ -366,173 +351,6 @@ export function Dashboard({
             </div>
           </div>
         )}
-
-      </div>
-
-      {/* =========================================================================
-          5. STAFF & ADMIN GOVERNANCE: USER COUNT & ACCESS STATUS (REQUEST 2)
-          ========================================================================= */}
-      <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-5 sm:p-7 border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] space-y-6">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/[0.08] gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                <ShieldCheck className="w-4 h-4" />
-              </span>
-              <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
-                <span>System Administration & Staff Access</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 uppercase font-bold">
-                  All Systems Operational
-                </span>
-              </h2>
-            </div>
-            <p className="text-xs text-slate-400">
-              Staff and administrator accounts authorized to operate the receipt portal.
-            </p>
-          </div>
-
-          {onOpenSettings && (
-            <button
-              onClick={() => onOpenSettings('roles')}
-              className="px-3.5 py-2 min-h-[40px] rounded-xl bg-white/[0.06] hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none self-start sm:self-auto cursor-pointer"
-            >
-              <Users className="w-3.5 h-3.5 text-amber-400" />
-              <span>Manage Roles in Settings</span>
-            </button>
-          )}
-        </div>
-
-        {/* Pending Requests Alert Banner for Owner/Admin */}
-        {pendingRequests && pendingRequests.length > 0 && onOpenSettings && (
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span className="text-xs font-bold text-amber-200">
-                <strong className="text-white font-mono">{pendingRequests.length}</strong> new person link {pendingRequests.length === 1 ? 'request' : 'requests'} waiting for approval as Editor (Admin) or Viewer (Staff).
-              </span>
-            </div>
-            <button
-              onClick={() => onOpenSettings('roles')}
-              className="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs transition active:scale-95 cursor-pointer shadow-sm hover:bg-amber-300"
-            >
-              Review in Settings
-            </button>
-          </div>
-        )}
-
-        {/* 3 Status KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
-          {/* Card 1: Admin Count & Status */}
-          <div className="p-4 rounded-2xl bg-purple-500/[0.06] border border-purple-500/20 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider">
-                System Administrators
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-black text-white font-mono tabular-nums">
-              {adminUsers.length} <span className="text-xs text-slate-400 font-sans font-normal">Admins</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Status: Active & Authorized (Full Privileges)</span>
-            </div>
-          </div>
-
-          {/* Card 2: Staff Count & Status */}
-          <div className="p-4 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/20 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
-                Counter Staff Members
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-black text-white font-mono tabular-nums">
-              {staffUsers.length} <span className="text-xs text-slate-400 font-sans font-normal">Staff</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Status: Active & Authorized (Counter & Mail)</span>
-            </div>
-          </div>
-
-          {/* Card 3: Master Owner Status */}
-          <div className="p-4 rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">
-                Master Authority
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold">
-                <Crown className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-black text-amber-300 font-mono tabular-nums">
-              {ownerUsers.length} <span className="text-xs text-slate-400 font-sans font-normal">Primary Owner</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-medium truncate">
-              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-              <span className="truncate">{OWNER_EMAIL} (Full Owner Access)</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* User Badges Strip */}
-        <div className="pt-2 border-t border-white/[0.06]">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
-            Authorized Personnel Directory (<span className="font-mono tabular-nums">{registeredUsers.length}</span> Accounts Active)
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {registeredUsers.map((u) => {
-              const isAccountOwner = u.isOwner || u.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
-              return (
-                <div
-                  key={u.id}
-                  className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex items-center justify-between gap-3 hover:bg-white/[0.04] transition"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={u.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=User'}
-                      alt={u.name}
-                      className="w-8 h-8 rounded-full border border-white/20 object-cover shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                        <span className="truncate">{u.name}</span>
-                        {isAccountOwner && <Crown className="w-3 h-3 text-amber-400 shrink-0" />}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono truncate">{u.email}</div>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    {isAccountOwner ? (
-                      <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono uppercase">
-                        Owner
-                      </span>
-                    ) : u.role === 'admin' ? (
-                      <span className="text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-mono uppercase">
-                        Admin
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono uppercase">
-                        Staff
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
       </div>
 

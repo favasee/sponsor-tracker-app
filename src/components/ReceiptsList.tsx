@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { ClassicReceipt, OWNER_EMAIL, PaymentMethod } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { hasUserPermission, loadPurposes, savePurposes } from '@/lib/settingsStorage';
+import { ClassicReceipt, PaymentMethod } from '@/types';
+import { loadPurposes, savePurposes } from '@/lib/settingsStorage';
 import { formatAmountInWords } from '@/lib/numberToWords';
 import { getNextClassicReceiptNumber } from '@/lib/receiptStorage';
 import { 
@@ -176,9 +175,6 @@ export function ReceiptsList({
   initialPurposeFilter,
   onNavigateToDashboard,
 }: ReceiptsListProps) {
-  const { user, isOwner } = useAuth();
-  const isAdminOrOwner = isOwner || user?.role === 'admin';
-
   const [searchTerm, setSearchTerm] = useState('');
   const [currencyFilter, setCurrencyFilter] = useState('All');
   const [purposeFilter, setPurposeFilter] = useState(initialPurposeFilter || 'All');
@@ -381,7 +377,7 @@ export function ReceiptsList({
           donorEmail = '';
         }
         if (!createdBy) {
-          createdBy = user?.name ? `${user.name} (Import)` : 'CSV Import';
+          createdBy = 'CSV Import';
         }
 
         const donorAddress = idxAddress >= 0 && row[idxAddress] ? row[idxAddress].trim().replace(/^"|"$/g, '') : '';
@@ -930,40 +926,33 @@ export function ReceiptsList({
                           <MessageSquare className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Email Link with Staff Role Permission */}
+                        {/* Email Link */}
                         <button
                           onClick={() => {
-                            const hasMailPerm = hasUserPermission(user?.role, user?.email, 'canSendMail');
-                            if (!hasMailPerm) {
-                              alert(`⚠️ Permission Restricted\n\nYour account role (${user?.role || 'Staff'}) does not have "Permission to Mail".\n\nPlease request an Administrator or Owner (${OWNER_EMAIL}) to enable "Permission to Mail" in Settings.`);
-                              return;
-                            }
                             const subject = encodeURIComponent(`Official Donation Receipt ${r.receiptNo} - Al-Huda Charitable Trust`);
                             const body = encodeURIComponent(`Dear ${r.donorName},\n\nHere is your official donation receipt ${r.receiptNo} for ${r.currency} ${r.donationAmount} (Indian Value: ₹${r.indianValue || r.donationAmount}) issued by Al-Huda Charitable Trust.\n\nPurpose: ${r.purpose}\nDate: ${r.date}\nPayment Mode: ${r.paymentMethod}\n\nThank you for your generous support.`);
                             window.location.href = `mailto:${r.donorEmail || ''}?subject=${subject}&body=${body}`;
                           }}
                           aria-label={`Send email for receipt #${r.receiptNo} to ${r.donorName}`}
-                          title="Dispatch receipt particulars via Email (Requires Staff Mail Permission)"
+                          title="Dispatch receipt particulars via Email"
                           className="p-2 min-h-[36px] min-w-[36px] rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer flex items-center justify-center"
                         >
                           <Mail className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Delete (Admin or Owner only) */}
-                        {isAdminOrOwner && (
-                          <button
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to delete receipt ${r.receiptNo}?`)) {
-                                onDeleteReceipt(r.id);
-                              }
-                            }}
-                            aria-label={`Delete receipt #${r.receiptNo}`}
-                            title="Delete receipt (Admin/Owner only)"
-                            className="p-2 min-h-[36px] min-w-[36px] rounded-xl bg-white/[0.04] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-white/10 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:outline-none cursor-pointer flex items-center justify-center"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                        {/* Delete Receipt */}
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete receipt ${r.receiptNo}?`)) {
+                              onDeleteReceipt(r.id);
+                            }
+                          }}
+                          aria-label={`Delete receipt #${r.receiptNo}`}
+                          title="Delete receipt"
+                          className="p-2 min-h-[36px] min-w-[36px] rounded-xl bg-white/[0.04] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-white/10 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:outline-none cursor-pointer flex items-center justify-center"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
 
                       </div>
                     </td>

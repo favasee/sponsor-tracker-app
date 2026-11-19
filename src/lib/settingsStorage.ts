@@ -232,26 +232,11 @@ export function saveStaffMembers(members: StaffMemberSetting[]): void {
   localStorage.setItem(STAFF_MEMBERS_KEY, JSON.stringify(members));
 }
 
-// Helper to evaluate if a user has a specific permission
+// Helper to evaluate if a user has a specific permission (always unrestricted)
 export function hasUserPermission(
-  userRole?: string,
-  userEmail?: string,
-  permission: keyof StaffPermissions = 'canSendMail'
+  _userRole?: string,
+  _userEmail?: string,
+  _permission: keyof StaffPermissions = 'canSendMail'
 ): boolean {
-  if (!userRole) return false;
-  // Owners and Admins always have full permissions
-  if (userRole === 'owner' || userRole === 'admin' || userRole === 'super_admin') return true;
-
-  // For staff: look up individual member setting first
-  if (typeof window !== 'undefined' && userEmail) {
-    const members = loadStaffMembers();
-    const found = members.find((m) => m.email.toLowerCase() === userEmail.toLowerCase());
-    if (found && found.permissions) {
-      return Boolean(found.permissions[permission]);
-    }
-  }
-
-  // Fallback to default staff permissions
-  const defaultPerms = loadDefaultStaffPermissions();
-  return Boolean(defaultPerms[permission]);
+  return true;
 }

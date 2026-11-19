@@ -18,8 +18,6 @@ import {
   saveWhatsAppAutomationConfig,
   pruneReceiptsToOnly1To6
 } from '@/lib/receiptStorage';
-import { useAuth } from '@/context/AuthContext';
-// import { LoginPage } from '@/components/LoginPage';
 import { Navbar } from '@/components/Navbar';
 import { Dashboard } from '@/components/Dashboard';
 import { ReceiptForm } from '@/components/ReceiptForm';
@@ -30,8 +28,6 @@ import { WhatsAppAutomationModal } from '@/components/WhatsAppAutomationModal';
 import { SettingsPage } from '@/components/SettingsPage';
 
 export default function Home() {
-  const { user, isLoading: authLoading } = useAuth();
-
   const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'register' | 'sponsors' | 'settings'>('dashboard');
   const [ledgerPurposeFilter, setLedgerPurposeFilter] = useState<string>('All');
   const [receipts, setReceipts] = useState<ClassicReceipt[]>([]);
@@ -51,7 +47,7 @@ export default function Home() {
   const [templateToApply, setTemplateToApply] = useState<RecurringDonorTemplate | null>(null);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<'header' | 'purposes' | 'currency' | 'roles'>('header');
+  const [settingsTab, setSettingsTab] = useState<'header' | 'purposes' | 'currency'>('header');
 
   // Load initial data from local storage
   useEffect(() => {
@@ -193,12 +189,6 @@ export default function Home() {
     return { addedCount, updatedCount };
   };
 
-  const handleOpenRoleManagement = () => {
-    setSettingsTab('roles');
-    setActiveView('settings');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleNavigateToRegisterWithPurpose = (purpose?: string) => {
     if (purpose) {
       setLedgerPurposeFilter(purpose);
@@ -218,7 +208,6 @@ export default function Home() {
         setActiveView={setActiveView}
         onOpenTemplates={() => setIsTemplatesModalOpen(true)}
         onOpenWhatsAppConfig={() => setIsWhatsAppModalOpen(true)}
-        onOpenRoleManagement={handleOpenRoleManagement}
         receiptCount={receipts.length}
       />
 

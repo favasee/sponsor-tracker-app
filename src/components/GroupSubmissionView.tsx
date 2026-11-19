@@ -161,7 +161,7 @@ export function GroupSubmissionView({
       submissionDate,
       paymentMethod,
       paymentRef,
-      user?.name || 'Authorized Admin'
+      user?.name || 'Office'
     );
 
     // Save batch to database / storage
@@ -254,7 +254,7 @@ export function GroupSubmissionView({
       submissionDate || new Date().toISOString().split('T')[0],
       paymentMethod,
       paymentRef,
-      user?.name || 'Authorized Admin'
+      user?.name || 'Office'
     );
 
     if (onReceiptSaved) {

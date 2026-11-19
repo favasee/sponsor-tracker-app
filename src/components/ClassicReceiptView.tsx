@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { ClassicReceipt, OWNER_EMAIL } from '@/types';
+import { ClassicReceipt } from '@/types';
 import { Download, Printer, MessageSquare, Mail, X, Check, ShieldCheck, Sparkles } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useAuth } from '@/context/AuthContext';
-import { loadHeaderSettings, hasUserPermission, OrganizationHeaderSettings } from '@/lib/settingsStorage';
+import { loadHeaderSettings, OrganizationHeaderSettings } from '@/lib/settingsStorage';
 
 interface ClassicReceiptViewProps {
   receipt: ClassicReceipt | null;
@@ -53,7 +52,6 @@ function formatNumericAmount(amount: number): string {
 
 
 export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }: ClassicReceiptViewProps) {
-  const { user } = useAuth();
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [header, setHeader] = useState<OrganizationHeaderSettings>(() => loadHeaderSettings());
@@ -87,16 +85,9 @@ export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }
     };
   }, [receipt]);
 
-  // Dispatch via Email with Staff Role Permission Enforcement
+  // Dispatch via Email
   const handleSendEmail = () => {
     if (!receipt) return;
-    const hasMailPerm = hasUserPermission(user?.role, user?.email, 'canSendMail');
-    if (!hasMailPerm) {
-      alert(
-        `⚠️ Permission Restricted\n\nYour staff account (${user?.email || 'Staff'}) does not have "Permission to Mail".\n\nPlease ask the Administrator or Owner (${OWNER_EMAIL}) to enable "Permission to Mail" for your account in Settings.`
-      );
-      return;
-    }
 
     const subject = encodeURIComponent(`Official Donation Receipt ${receipt.receiptNo} - ${header.trustName}`);
     const body = encodeURIComponent(`Dear ${receipt.donorName},
@@ -322,12 +313,12 @@ ${header.trustName}`);
               <span>Print</span>
             </button>
 
-            {/* Email Dispatch button with Staff Role Permission */}
+            {/* Email Dispatch button */}
             <button
               onClick={handleSendEmail}
               aria-label={`Dispatch receipt ${receipt.receiptNo} via Email`}
               className="px-3 py-1.5 min-h-[36px] rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer"
-              title="Dispatch via Email (Requires Staff Mail Permission)"
+              title="Dispatch via Email"
             >
               <Mail className="w-3.5 h-3.5" />
               <span>Email</span>

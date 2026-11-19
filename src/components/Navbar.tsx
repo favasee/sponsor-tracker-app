@@ -1,21 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import { 
   LayoutDashboard,
   FileText, 
   Receipt as ReceiptIcon, 
   Bookmark, 
   MessageSquare, 
-  Crown, 
-  LogOut, 
   Settings,
   Menu,
   X,
-  Sparkles,
-  ChevronRight,
-  Inbox
+  ChevronRight
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -23,7 +18,6 @@ interface NavbarProps {
   setActiveView: (view: 'dashboard' | 'create' | 'register' | 'sponsors' | 'settings') => void;
   onOpenTemplates: () => void;
   onOpenWhatsAppConfig: () => void;
-  onOpenRoleManagement: () => void;
   receiptCount: number;
 }
 
@@ -32,10 +26,8 @@ export function Navbar({
   setActiveView,
   onOpenTemplates,
   onOpenWhatsAppConfig,
-  onOpenRoleManagement,
   receiptCount,
 }: NavbarProps) {
-  const { user, signOut, isOwner, pendingRequests } = useAuth();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const navigateTo = (view: 'dashboard' | 'create' | 'register' | 'settings') => {
@@ -149,7 +141,7 @@ export function Navbar({
                 <span>Settings</span>
               </div>
               <span className="text-[9px] uppercase font-bold text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">
-                A5/Roles
+                A5/Config
               </span>
             </button>
 
@@ -187,60 +179,15 @@ export function Navbar({
               </span>
             </button>
 
-            {/* Owner Alert: Pending Access Requests */}
-            {isOwner && pendingRequests.length > 0 && (
-              <button
-                onClick={onOpenRoleManagement}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition cursor-pointer shadow-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <Inbox className="w-4 h-4 text-amber-400" />
-                  <span>Access Requests</span>
-                </div>
-                <span className="text-[10px] font-mono font-black bg-rose-500 text-white px-2 py-0.5 rounded-full tabular-nums">
-                  {pendingRequests.length}
-                </span>
-              </button>
-            )}
-
           </div>
 
         </div>
 
-        {/* Bottom Profile Card & Sign Out */}
-        <div className="p-4 border-t border-white/[0.08] bg-[#07080C]/80 space-y-3">
-          
-          <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/[0.04] border border-white/10">
-            <img
-              src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=User'}
-              alt={user?.name || 'User'}
-              className="w-8 h-8 rounded-full border border-white/20 object-cover shrink-0"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                <span className="truncate">{user?.name}</span>
-                {isOwner && <Crown className="w-3 h-3 text-amber-400 shrink-0 inline" />}
-              </div>
-              <div className="text-[10px] font-bold">
-                {isOwner ? (
-                  <span className="text-amber-400">👑 Master Owner</span>
-                ) : user?.role === 'admin' ? (
-                  <span className="text-purple-300">🛡️ Admin</span>
-                ) : (
-                  <span className="text-emerald-400">👤 Staff</span>
-                )}
-              </div>
-            </div>
+        {/* Bottom System Brand Info */}
+        <div className="p-4 border-t border-white/[0.08] bg-[#07080C]/80">
+          <div className="text-[11px] text-slate-500 font-medium text-center">
+            Donation Receipt Portal
           </div>
-
-          <button
-            onClick={signOut}
-            className="w-full py-2 px-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-rose-500/20 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
-
         </div>
 
       </aside>
@@ -273,16 +220,11 @@ export function Navbar({
           </div>
         </div>
 
-        {/* Right: User Avatar & Quick View Indicator */}
+        {/* Right: Quick View Indicator */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 uppercase">
             {activeView === 'dashboard' ? 'Dashboard' : activeView === 'create' ? 'Issue' : activeView === 'register' ? `Ledger (${receiptCount})` : 'Settings'}
           </span>
-          <img
-            src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=User'}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full border border-white/20"
-          />
         </div>
 
       </header>
@@ -407,46 +349,13 @@ export function Navbar({
                   <MessageSquare className="w-4 h-4 text-emerald-400" />
                   <span>WhatsApp Webhook</span>
                 </button>
-
-                {isOwner && pendingRequests.length > 0 && (
-                  <button
-                    onClick={() => { onOpenRoleManagement(); setMobileDrawerOpen(false); }}
-                    className="w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Inbox className="w-4 h-4 text-amber-400" />
-                      <span>Access Requests</span>
-                    </div>
-                    <span className="text-[10px] font-mono font-black bg-rose-500 text-white px-2 py-0.5 rounded-full tabular-nums">
-                      {pendingRequests.length}
-                    </span>
-                  </button>
-                )}
               </div>
 
             </div>
 
-            {/* Mobile Drawer Bottom User Card */}
-            <div className="pt-4 border-t border-white/10 space-y-3">
-              <div className="flex items-center gap-3">
-                <img
-                  src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=User'}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full border border-white/20"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-white truncate">{user?.name}</div>
-                  <div className="text-[10px] text-amber-400 font-bold uppercase">{user?.role}</div>
-                </div>
-              </div>
-
-              <button
-                onClick={signOut}
-                className="w-full min-h-[44px] py-2 rounded-xl bg-white/10 hover:bg-white/15 text-rose-300 font-bold text-xs flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:outline-none transition active:scale-[0.98]"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
-              </button>
+            {/* Mobile Drawer Bottom Info */}
+            <div className="pt-4 border-t border-white/10 text-center">
+              <span className="text-[11px] text-slate-500 font-medium">Donation Receipt Portal</span>
             </div>
 
           </div>

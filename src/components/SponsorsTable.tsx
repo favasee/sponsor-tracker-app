@@ -581,7 +581,7 @@ export function SponsorsTable({
                                   onDelete(s.id);
                                 }
                               }}
-                              title="Delete sponsor (Super Admin/Admin)"
+                              title="Delete sponsor"
                               className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

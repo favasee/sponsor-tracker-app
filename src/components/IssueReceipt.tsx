@@ -215,14 +215,6 @@ export function IssueReceipt({
             Generate official donation receipts and dispatch instant localized WhatsApp confirmations.
           </p>
         </div>
-
-        {/* Read-only warning for Viewer Role */}
-        {!permissions.canIssueReceipt && (
-          <div className="flex items-center gap-2 px-3.5 py-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-semibold">
-            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-            <span>Viewer Role Active: Form is in Read-Only demonstration mode.</span>
-          </div>
-        )}
       </div>
 
       {/* Main Grid: Form Left, Preview & Recent Right */}

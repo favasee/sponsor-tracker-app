@@ -323,7 +323,7 @@ export function ReceiptForm({
             ...(receiptToEdit?.editLogs || []),
             {
               editedAt: nowIso,
-              editedBy: user?.name || 'Authorized Staff',
+              editedBy: user?.name || 'Office',
               reason: editReason || 'Correction of receipt particulars',
               previousAmount: receiptToEdit?.donationAmount,
               previousIndianValue: receiptToEdit?.indianValue,
@@ -331,7 +331,7 @@ export function ReceiptForm({
           ]
         : undefined,
       whatsappStatus: queueWhatsApp ? 'placeholder' : undefined,
-      createdBy: receiptToEdit ? receiptToEdit.createdBy : (user?.name || 'Admin'),
+      createdBy: receiptToEdit ? receiptToEdit.createdBy : (user?.name || 'Office'),
       createdAt: receiptToEdit ? receiptToEdit.createdAt : nowIso,
       updatedAt: nowIso,
     };

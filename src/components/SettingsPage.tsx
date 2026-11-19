@@ -5,9 +5,6 @@ import {
   Building, 
   Target, 
   Coins, 
-  Users, 
-  Mail, 
-  ShieldCheck, 
   Check, 
   Plus, 
   Trash2, 
@@ -15,18 +12,8 @@ import {
   RotateCcw, 
   Save, 
   Sparkles,
-  Lock,
-  Unlock,
-  AlertCircle,
-  Crown,
-  UserPlus,
-  Inbox,
-  UserCheck,
-  Shield,
-  XCircle
+  AlertCircle
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { OWNER_EMAIL } from '@/types';
 import {
   OrganizationHeaderSettings,
   DEFAULT_HEADER_SETTINGS,
@@ -38,40 +25,17 @@ import {
   CurrencyConfig,
   loadCurrenciesConfig,
   saveCurrenciesConfig,
-  DEFAULT_CURRENCIES,
-  StaffPermissions,
-  DEFAULT_STAFF_PERMISSIONS,
-  loadDefaultStaffPermissions,
-  saveDefaultStaffPermissions,
-  StaffMemberSetting,
-  loadStaffMembers,
-  saveStaffMembers,
-  DEFAULT_STAFF_MEMBERS
+  DEFAULT_CURRENCIES
 } from '@/lib/settingsStorage';
 
 interface SettingsPageProps {
   onSettingsUpdated?: () => void;
-  initialTab?: 'header' | 'purposes' | 'currency' | 'roles';
+  initialTab?: 'header' | 'purposes' | 'currency';
 }
 
 export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProps) {
-  const { 
-    user, 
-    registeredUsers, 
-    assignUserRole, 
-    deleteUser, 
-    loginCustomUser, 
-    isOwner,
-    accessRequests,
-    pendingRequests,
-    approveAccessRequest,
-    rejectAccessRequest,
-    deleteAccessRequest
-  } = useAuth();
-  const isAdminOrOwner = isOwner || user?.role === 'admin';
-
-  // Active Tab: 'header' | 'purposes' | 'currency' | 'roles'
-  const [activeTab, setActiveTab] = useState<'header' | 'purposes' | 'currency' | 'roles'>(initialTab || 'header');
+  // Active Tab: 'header' | 'purposes' | 'currency'
+  const [activeTab, setActiveTab] = useState<'header' | 'purposes' | 'currency'>(initialTab || 'header');
 
   // Sync activeTab when initialTab changes from parent
   useEffect(() => {
@@ -79,24 +43,6 @@ export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProp
       setActiveTab(initialTab);
     }
   }, [initialTab]);
-
-  // User Role Assignment Portal State (Image 2)
-  const [newAuthEmail, setNewAuthEmail] = useState('');
-  const [newAuthName, setNewAuthName] = useState('');
-  const [newAuthRole, setNewAuthRole] = useState<'admin' | 'staff'>('staff');
-  const [showAddUserForm, setShowAddUserForm] = useState(false);
-
-  const handleAddNewAuthorizedUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAuthEmail.trim()) {
-      alert('Email is required');
-      return;
-    }
-    loginCustomUser(newAuthEmail, newAuthName, newAuthRole);
-    setNewAuthEmail('');
-    setNewAuthName('');
-    setShowAddUserForm(false);
-  };
 
   // 1. Header Settings State
   const [headerSettings, setHeaderSettings] = useState<OrganizationHeaderSettings>(DEFAULT_HEADER_SETTINGS);
@@ -115,21 +61,11 @@ export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProp
   const [newCurrencyName, setNewCurrencyName] = useState('');
   const [newCurrencySymbol, setNewCurrencySymbol] = useState('');
 
-  // 4. Staff Permissions State
-  const [defaultPermissions, setDefaultPermissions] = useState<StaffPermissions>(DEFAULT_STAFF_PERMISSIONS);
-  const [staffMembers, setStaffMembers] = useState<StaffMemberSetting[]>([]);
-  const [newStaffEmail, setNewStaffEmail] = useState('');
-  const [newStaffName, setNewStaffName] = useState('');
-  const [newStaffCanMail, setNewStaffCanMail] = useState(false);
-  const [staffSavedAlert, setStaffSavedAlert] = useState(false);
-
   // Load stored configurations on mount
   useEffect(() => {
     setHeaderSettings(loadHeaderSettings());
     setPurposes(loadPurposes());
     setCurrencies(loadCurrenciesConfig());
-    setDefaultPermissions(loadDefaultStaffPermissions());
-    setStaffMembers(loadStaffMembers());
   }, []);
 
   // Save Header
@@ -266,115 +202,24 @@ export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProp
     }
   };
 
-  // Staff Permissions Handlers
-  const handleToggleDefaultPerm = (key: keyof StaffPermissions) => {
-    const updated = {
-      ...defaultPermissions,
-      [key]: !defaultPermissions[key],
-    };
-    setDefaultPermissions(updated);
-    saveDefaultStaffPermissions(updated);
-  };
-
-  const handleToggleMemberMailPerm = (memberId: string) => {
-    const updated = staffMembers.map(m => {
-      if (m.id === memberId) {
-        return {
-          ...m,
-          permissions: {
-            ...m.permissions,
-            canSendMail: !m.permissions.canSendMail,
-          }
-        };
-      }
-      return m;
-    });
-    setStaffMembers(updated);
-    saveStaffMembers(updated);
-    setStaffSavedAlert(true);
-    setTimeout(() => setStaffSavedAlert(false), 2000);
-  };
-
-  const handleToggleMemberPerm = (memberId: string, permKey: keyof StaffPermissions) => {
-    const updated = staffMembers.map(m => {
-      if (m.id === memberId) {
-        return {
-          ...m,
-          permissions: {
-            ...m.permissions,
-            [permKey]: !m.permissions[permKey],
-          }
-        };
-      }
-      return m;
-    });
-    setStaffMembers(updated);
-    saveStaffMembers(updated);
-  };
-
-  const handleAddStaffMember = (e: React.FormEvent) => {
-    e.preventDefault();
-    const email = newStaffEmail.trim().toLowerCase();
-    const name = newStaffName.trim();
-    if (!email || !name) return;
-    if (staffMembers.some(m => m.email.toLowerCase() === email)) {
-      alert('A staff account with this email already exists.');
-      return;
-    }
-
-    const newMember: StaffMemberSetting = {
-      id: `staff-${Date.now()}`,
-      email,
-      name,
-      role: 'staff',
-      permissions: {
-        ...defaultPermissions,
-        canSendMail: newStaffCanMail,
-      },
-      assignedAt: new Date().toISOString(),
-    };
-
-    const updated = [...staffMembers, newMember];
-    setStaffMembers(updated);
-    saveStaffMembers(updated);
-    setNewStaffEmail('');
-    setNewStaffName('');
-    setNewStaffCanMail(false);
-    setStaffSavedAlert(true);
-    setTimeout(() => setStaffSavedAlert(false), 2000);
-  };
-
-  const handleDeleteStaffMember = (id: string, name: string) => {
-    if (confirm(`Remove staff privileges for "${name}"?`)) {
-      const updated = staffMembers.filter(m => m.id !== id);
-      setStaffMembers(updated);
-      saveStaffMembers(updated);
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-2 animate-in fade-in duration-200">
       
-      {/* Header Banner in Image 3 Dark Glass Style */}
+      {/* Header Banner */}
       <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Administrative Configuration</span>
+              <span>Receipt Settings</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Settings & Roles
+              Settings
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-              Configure receipt header details, customize donation purposes, manage currencies, and grant staff role permissions (including permission to mail).
+              Configure receipt header details, customize donation purposes, and manage currencies.
             </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300 font-mono">
-              Role: <strong className="text-amber-300 uppercase">{user?.role || 'Staff'}</strong>
-            </span>
           </div>
         </div>
 
@@ -414,18 +259,6 @@ export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProp
           >
             <Coins className="w-3.5 h-3.5" />
             <span>Currencies ({currencies.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('roles')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
-              activeTab === 'roles'
-                ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-md font-black'
-                : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] border border-white/10'
-            }`}
-          >
-            <Crown className="w-3.5 h-3.5" />
-            <span>User Roles & Permissions</span>
           </button>
         </div>
       </div>
@@ -970,575 +803,6 @@ export function SettingsPage({ onSettingsUpdated, initialTab }: SettingsPageProp
         </div>
       )}
 
-      {/* ================= TAB 4: USER ROLE ASSIGNMENT PORTAL & PERMISSIONS (IMAGE 2) ================= */}
-      {activeTab === 'roles' && (
-        <div className="space-y-6">
-          
-          {/* Card 1: User Role Assignment Portal (Image 2) */}
-          <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
-            
-            {/* Header matching Image 2 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/[0.08] gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center font-bold shadow-md shrink-0">
-                  <Crown className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-black text-white">
-                      User Role Assignment Portal
-                    </h2>
-                    <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono uppercase">
-                      Owner Exclusive
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Logged in as <strong className="text-white">{user?.email || OWNER_EMAIL}</strong> • Assign Admin or Staff roles to accounts
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Owner Authority Active Notice matching Image 2 */}
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 flex items-start gap-3">
-              <Crown className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-white">Owner Authority Active: </span>
-                As the master owner (<span className="font-mono text-amber-300">{OWNER_EMAIL}</span>), any privilege change you make here takes effect immediately across the user&apos;s active session and database access.
-              </div>
-            </div>
-
-            {/* Google Sheets Link Access Requests Section (Editor, Viewer, Reject) */}
-            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Inbox className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-black text-white uppercase tracking-wider">
-                    Link Access Requests ({pendingRequests.length} Pending)
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400">Google Sheets Sharing System</span>
-              </div>
-
-              {pendingRequests.length === 0 ? (
-                <div className="text-center py-6 text-slate-500 text-xs">
-                  No pending access requests. When someone clicks your shared portal link and requests access, it will appear here.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {pendingRequests.map((req) => (
-                    <div
-                      key={req.id}
-                      className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold text-white">{req.name}</span>
-                            <span className="text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded">
-                              {req.email}
-                            </span>
-                          </div>
-                          {req.message && (
-                            <p className="text-[11px] text-slate-300 italic mt-1">&ldquo;{req.message}&rdquo;</p>
-                          )}
-                        </div>
-
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border shrink-0 ${
-                          req.requestedRole === 'admin'
-                            ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
-                            : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                        }`}>
-                          Requested {req.requestedRole === 'admin' ? 'Editor' : 'Viewer'}
-                        </span>
-                      </div>
-
-                      {/* 3 Action Buttons: Editor, Viewer, Reject */}
-                      <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => approveAccessRequest(req.id, 'admin')}
-                          className="px-3 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/30 text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5"
-                        >
-                          <Shield className="w-3.5 h-3.5 text-purple-400" />
-                          <span>Approve as Editor (Admin)</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => approveAccessRequest(req.id, 'staff')}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/30 text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5"
-                        >
-                          <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Approve as Viewer (Staff)</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => rejectAccessRequest(req.id)}
-                          className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Add User Toggle or Form matching Image 2 */}
-            {showAddUserForm ? (
-              <form onSubmit={handleAddNewAuthorizedUser} className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <UserPlus className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Pre-Authorize New User</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddUserForm(false)}
-                    className="text-xs text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Account Email *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={newAuthEmail}
-                      onChange={(e) => setNewAuthEmail(e.target.value)}
-                      placeholder="e.g. finance.officer@gmail.com"
-                      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      User Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newAuthName}
-                      onChange={(e) => setNewAuthName(e.target.value)}
-                      placeholder="e.g. Tariq Ahmed"
-                      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-400">Assign Role:</span>
-                    <button
-                      type="button"
-                      onClick={() => setNewAuthRole('admin')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        newAuthRole === 'admin' ? 'bg-purple-600 text-white shadow-xs' : 'bg-white/10 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      Admin
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNewAuthRole('staff')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        newAuthRole === 'staff' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white/10 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      Staff
-                    </button>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 text-xs font-black shadow-md cursor-pointer transition"
-                  >
-                    Save & Pre-Authorize
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  AUTHORIZED ACCOUNTS ({registeredUsers.length})
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowAddUserForm(true)}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-md"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Add / Pre-Authorize User</span>
-                </button>
-              </div>
-            )}
-
-            {/* Authorized Accounts List matching Image 2 */}
-            <div className="border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/10 bg-white/[0.02]">
-              {registeredUsers.map((u) => {
-                const isAccountOwner = u.isOwner || u.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
-
-                // Compute initials for the avatar bubble
-                const initials = u.name
-                  ? u.name
-                      .split(' ')
-                      .map((p) => p[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()
-                  : u.email.slice(0, 2).toUpperCase();
-
-                return (
-                  <div
-                    key={u.id}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.04] transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center font-bold text-xs text-white shrink-0">
-                        {initials}
-                      </div>
-                      <div>
-                        <div className="font-bold text-white text-sm flex items-center gap-1.5">
-                          <span>{u.name}</span>
-                          {isAccountOwner && (
-                            <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.2 rounded-full font-mono">
-                              👑 OWNER
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-slate-400 font-mono">
-                          {u.email}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Role Assignment Actions matching Image 2 */}
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      {isAccountOwner ? (
-                        <span className="text-xs font-black text-amber-300 bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-xl font-mono">
-                          Primary Owner
-                        </span>
-                      ) : (
-                        <>
-                          <div className="flex items-center rounded-xl bg-white/[0.05] p-1 border border-white/10">
-                            <button
-                              type="button"
-                              onClick={() => assignUserRole(u.id, 'admin')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                                u.role === 'admin'
-                                  ? 'bg-purple-600 text-white shadow-xs font-black'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
-                            >
-                              Admin
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => assignUserRole(u.id, 'staff')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                                u.role === 'staff'
-                                  ? 'bg-emerald-600 text-white shadow-xs font-black'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
-                            >
-                              Staff
-                            </button>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm(`Remove account access for ${u.name}?`)) {
-                                deleteUser(u.id);
-                              }
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition cursor-pointer"
-                            title="Remove user"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-          </div>
-
-          {/* Card 2: Staff Permissions & Permission to Mail */}
-          <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/[0.08] gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-amber-400" />
-                  <span>Staff Role & Email Permissions Control</span>
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Explicitly grant or restrict staff privileges, specifically <strong>Permission to Mail (Email Dispatch)</strong>, WhatsApp notifications, and receipt edits.
-                </p>
-              </div>
-
-              {staffSavedAlert && (
-                <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Permissions updated!</span>
-                </span>
-              )}
-            </div>
-
-            {/* Explanation Alert */}
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-xs text-amber-200">
-              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-white block font-bold mb-0.5">Staff Mail Permission Policy:</strong>
-                Staff users with <strong>Permission to Mail</strong> enabled can dispatch official receipts via email directly to donors. Staff without this permission are prevented from sending emails, ensuring donor communications remain supervised.
-              </div>
-            </div>
-
-            {/* Global Default Staff Permissions */}
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-4">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Default Global Permissions For Staff Role</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                
-                {/* Specifically requested "Permission to Mail" */}
-                <div 
-                  onClick={() => handleToggleDefaultPerm('canSendMail')}
-                  className={`p-3 rounded-xl border cursor-pointer transition select-none flex items-center justify-between ${
-                    defaultPermissions.canSendMail
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                      : 'bg-white/[0.03] border-white/10 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-amber-400" />
-                    <div>
-                      <div className="font-bold text-xs text-white">Permission to Mail</div>
-                      <div className="text-[10px] text-slate-400">Send receipt emails</div>
-                    </div>
-                  </div>
-                  {defaultPermissions.canSendMail ? <Check className="w-4 h-4 text-emerald-400" /> : <Lock className="w-3.5 h-3.5" />}
-                </div>
-
-                {/* WhatsApp */}
-                <div 
-                  onClick={() => handleToggleDefaultPerm('canSendWhatsApp')}
-                  className={`p-3 rounded-xl border cursor-pointer transition select-none flex items-center justify-between ${
-                    defaultPermissions.canSendWhatsApp
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                      : 'bg-white/[0.03] border-white/10 text-slate-400'
-                  }`}
-                >
-                  <div>
-                    <div className="font-bold text-xs text-white">WhatsApp Dispatch</div>
-                    <div className="text-[10px] text-slate-400">Send WA reminders</div>
-                  </div>
-                  {defaultPermissions.canSendWhatsApp ? <Check className="w-4 h-4 text-emerald-400" /> : <Lock className="w-3.5 h-3.5" />}
-                </div>
-
-                {/* Edit Receipt */}
-                <div 
-                  onClick={() => handleToggleDefaultPerm('canEditReceipt')}
-                  className={`p-3 rounded-xl border cursor-pointer transition select-none flex items-center justify-between ${
-                    defaultPermissions.canEditReceipt
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                      : 'bg-white/[0.03] border-white/10 text-slate-400'
-                  }`}
-                >
-                  <div>
-                    <div className="font-bold text-xs text-white">Edit Receipts</div>
-                    <div className="text-[10px] text-slate-400">Correct receipt data</div>
-                  </div>
-                  {defaultPermissions.canEditReceipt ? <Check className="w-4 h-4 text-emerald-400" /> : <Lock className="w-3.5 h-3.5" />}
-                </div>
-
-                {/* Delete Receipt */}
-                <div 
-                  onClick={() => handleToggleDefaultPerm('canDeleteReceipt')}
-                  className={`p-3 rounded-xl border cursor-pointer transition select-none flex items-center justify-between ${
-                    defaultPermissions.canDeleteReceipt
-                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                      : 'bg-white/[0.03] border-white/10 text-slate-400'
-                  }`}
-                >
-                  <div>
-                    <div className="font-bold text-xs text-white">Delete Receipts</div>
-                    <div className="text-[10px] text-slate-400">Purge records</div>
-                  </div>
-                  {defaultPermissions.canDeleteReceipt ? <Check className="w-4 h-4 text-rose-400" /> : <Lock className="w-3.5 h-3.5" />}
-                </div>
-
-              </div>
-            </div>
-
-            {/* Add New Staff Member Form */}
-            <form onSubmit={handleAddStaffMember} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-4">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Plus className="w-3.5 h-3.5 text-amber-400" />
-                <span>Add / Assign Staff Member</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Staff Member Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newStaffName}
-                    onChange={(e) => setNewStaffName(e.target.value)}
-                    required
-                    placeholder="e.g. Zaid Farhan"
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Staff Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={newStaffEmail}
-                    onChange={(e) => setNewStaffEmail(e.target.value)}
-                    required
-                    placeholder="e.g. counter.staff@thaqaful.org"
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs font-mono font-medium focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 pt-4 sm:pt-0">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-200 font-bold">
-                    <input
-                      type="checkbox"
-                      checked={newStaffCanMail}
-                      onChange={(e) => setNewStaffCanMail(e.target.checked)}
-                      className="rounded text-amber-500 focus:ring-amber-500 border-white/20 bg-white/10 w-4 h-4 cursor-pointer"
-                    />
-                    <span>Grant Permission to Mail</span>
-                  </label>
-
-                  <button
-                    type="submit"
-                    className="ml-auto px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 text-xs font-black shadow-md flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Register Staff</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            {/* Staff Members Table */}
-            <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
-              <div className="px-5 py-3 bg-white/[0.02] border-b border-white/[0.08] text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Active Staff Directory & Permission Matrix
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-white/[0.06] text-slate-400 text-[11px] uppercase tracking-wider select-none bg-white/[0.01]">
-                      <th className="py-3 px-5">Staff Member</th>
-                      <th className="py-3 px-5">Role</th>
-                      <th className="py-3 px-5 text-center">Permission to Mail</th>
-                      <th className="py-3 px-5 text-center">WhatsApp</th>
-                      <th className="py-3 px-5 text-center">Edit Receipts</th>
-                      <th className="py-3 px-5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    {staffMembers.map((m) => (
-                      <tr key={m.id} className="hover:bg-white/[0.02] transition">
-                        
-                        <td className="py-3.5 px-5">
-                          <div className="font-bold text-white">{m.name}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">{m.email}</div>
-                        </td>
-
-                        <td className="py-3.5 px-5">
-                          <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-white/10 text-slate-300 border border-white/10">
-                            {m.role}
-                          </span>
-                        </td>
-
-                        {/* Permission to Mail Toggle */}
-                        <td className="py-3.5 px-5 text-center">
-                          <button
-                            onClick={() => handleToggleMemberMailPerm(m.id)}
-                            className={`px-3 py-1 rounded-xl text-[11px] font-bold border transition cursor-pointer inline-flex items-center gap-1.5 ${
-                              m.permissions?.canSendMail
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30'
-                                : 'bg-rose-500/10 text-rose-300 border-rose-500/20 hover:bg-rose-500/20'
-                            }`}
-                          >
-                            <Mail className="w-3 h-3" />
-                            <span>{m.permissions?.canSendMail ? 'Allowed' : 'Restricted'}</span>
-                          </button>
-                        </td>
-
-                        {/* WhatsApp Toggle */}
-                        <td className="py-3.5 px-5 text-center">
-                          <button
-                            onClick={() => handleToggleMemberPerm(m.id, 'canSendWhatsApp')}
-                            className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border cursor-pointer ${
-                              m.permissions?.canSendWhatsApp
-                                ? 'bg-white/10 text-slate-200 border-white/20'
-                                : 'bg-white/[0.02] text-slate-500 border-white/5'
-                            }`}
-                          >
-                            {m.permissions?.canSendWhatsApp ? 'Enabled' : 'Disabled'}
-                          </button>
-                        </td>
-
-                        {/* Edit Toggle */}
-                        <td className="py-3.5 px-5 text-center">
-                          <button
-                            onClick={() => handleToggleMemberPerm(m.id, 'canEditReceipt')}
-                            className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border cursor-pointer ${
-                              m.permissions?.canEditReceipt
-                                ? 'bg-white/10 text-slate-200 border-white/20'
-                                : 'bg-white/[0.02] text-slate-500 border-white/5'
-                            }`}
-                          >
-                            {m.permissions?.canEditReceipt ? 'Enabled' : 'Disabled'}
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-5 text-right">
-                          <button
-                            onClick={() => handleDeleteStaffMember(m.id, m.name)}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition cursor-pointer"
-                            title="Remove staff member"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
     </div>
   );

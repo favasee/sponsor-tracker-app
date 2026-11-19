@@ -25,51 +25,23 @@ interface RoleContextType {
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
+const UNRESTRICTED_PERMISSIONS: RolePermissions = {
+  canCreateSponsor: true,
+  canEditSponsor: true,
+  canDeleteSponsor: true,
+  canIssueReceipt: true,
+  canDeleteReceipt: true,
+  canSendWhatsApp: true,
+  canExportData: true,
+  canManageSettings: true,
+  canViewAuditLogs: true,
+};
+
 const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
-  super_admin: {
-    canCreateSponsor: true,
-    canEditSponsor: true,
-    canDeleteSponsor: true,
-    canIssueReceipt: true,
-    canDeleteReceipt: true,
-    canSendWhatsApp: true,
-    canExportData: true,
-    canManageSettings: true,
-    canViewAuditLogs: true,
-  },
-  admin: {
-    canCreateSponsor: true,
-    canEditSponsor: true,
-    canDeleteSponsor: true,
-    canIssueReceipt: true,
-    canDeleteReceipt: true,
-    canSendWhatsApp: true,
-    canExportData: true,
-    canManageSettings: false,
-    canViewAuditLogs: false,
-  },
-  staff: {
-    canCreateSponsor: true,
-    canEditSponsor: true,
-    canDeleteSponsor: false,
-    canIssueReceipt: true,
-    canDeleteReceipt: false,
-    canSendWhatsApp: true,
-    canExportData: true,
-    canManageSettings: false,
-    canViewAuditLogs: false,
-  },
-  viewer: {
-    canCreateSponsor: false,
-    canEditSponsor: false,
-    canDeleteSponsor: false,
-    canIssueReceipt: false,
-    canDeleteReceipt: false,
-    canSendWhatsApp: false,
-    canExportData: true,
-    canManageSettings: false,
-    canViewAuditLogs: false,
-  },
+  super_admin: UNRESTRICTED_PERMISSIONS,
+  admin: UNRESTRICTED_PERMISSIONS,
+  staff: UNRESTRICTED_PERMISSIONS,
+  viewer: UNRESTRICTED_PERMISSIONS,
 };
 
 export const ROLE_LABELS: Record<UserRole, { title: string; badgeClass: string; desc: string }> = {
