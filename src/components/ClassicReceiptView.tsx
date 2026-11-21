@@ -13,7 +13,8 @@ import {
   Sparkles,
   Edit3,
   ZoomIn,
-  Smartphone
+  Smartphone,
+  FileImage
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -66,6 +67,7 @@ function formatNumericAmount(amount: number): string {
 export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }: ClassicReceiptViewProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingJPEG, setIsExportingJPEG] = useState(false);
   const [header, setHeader] = useState<OrganizationHeaderSettings>(() => loadHeaderSettings());
   // Template Style: 'modern' (Image 2 - default) vs 'classic' (Image 1 - 80G border)
   const [templateStyle, setTemplateStyle] = useState<'modern' | 'classic'>('modern');
@@ -154,6 +156,133 @@ ${header.trustName}`);
     window.location.href = mailto;
   };
 
+  // Helper: Generate high-resolution canvas with mathematically locked table-cell centering
+  const generateReceiptCanvas = async (element: HTMLElement) => {
+    return await html2canvas(element, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      onclone: (clonedDoc) => {
+        const card = clonedDoc.getElementById('printable-receipt-card');
+        if (!card) return;
+        card.style.boxShadow = 'none';
+        card.style.transform = 'none';
+        card.style.margin = '0 auto';
+        card.style.width = '560px';
+        card.style.height = '794px';
+        card.style.minWidth = '560px';
+        card.style.minHeight = '794px';
+        card.style.maxWidth = '560px';
+        card.style.maxHeight = '794px';
+
+        let p = card.parentElement;
+        while (p && p !== clonedDoc.body) {
+          p.style.transform = 'none';
+          p.style.overflow = 'visible';
+          p.style.width = 'auto';
+          p.style.height = 'auto';
+          p.style.margin = '0';
+          p = p.parentElement;
+        }
+
+        // Enforce exact AMOUNT capsule metrics in html2canvas using table-cell for mathematically locked vertical alignment
+        const amountRow = card.querySelector('#receipt-amount-row') as HTMLElement | null;
+        if (amountRow) {
+          amountRow.style.display = 'flex';
+          amountRow.style.alignItems = 'center';
+          amountRow.style.paddingTop = '2px';
+        }
+        const amountLabel = card.querySelector('#receipt-amount-label') as HTMLElement | null;
+        if (amountLabel) {
+          amountLabel.style.height = '32px';
+          amountLabel.style.lineHeight = '32px';
+          amountLabel.style.marginRight = '12px';
+          amountLabel.style.display = 'inline-flex';
+          amountLabel.style.alignItems = 'center';
+        }
+        const amountContainer = card.querySelector('#receipt-amount-badge-container') as HTMLElement | null;
+        if (amountContainer) {
+          amountContainer.style.display = 'inline-table';
+          amountContainer.style.verticalAlign = 'middle';
+          amountContainer.style.height = '32px';
+          amountContainer.style.minHeight = '32px';
+          amountContainer.style.maxHeight = '32px';
+          amountContainer.style.padding = '2px';
+          amountContainer.style.borderRadius = '16px';
+          amountContainer.style.backgroundColor = '#EEEEEE';
+          amountContainer.style.boxSizing = 'border-box';
+          amountContainer.style.borderCollapse = 'separate';
+        }
+        const currencyBadge = card.querySelector('#receipt-currency-badge') as HTMLElement | null;
+        if (currencyBadge) {
+          currencyBadge.style.display = 'table-cell';
+          currencyBadge.style.verticalAlign = 'middle';
+          currencyBadge.style.textAlign = 'center';
+          currencyBadge.style.height = '28px';
+          currencyBadge.style.lineHeight = '28px';
+          currencyBadge.style.borderRadius = '14px';
+          currencyBadge.style.backgroundColor = '#0075BF';
+          currencyBadge.style.color = '#FFFFFF';
+          currencyBadge.style.paddingLeft = '14px';
+          currencyBadge.style.paddingRight = '14px';
+          currencyBadge.style.boxSizing = 'border-box';
+        }
+        const amountValue = card.querySelector('#receipt-amount-value') as HTMLElement | null;
+        if (amountValue) {
+          amountValue.style.display = 'table-cell';
+          amountValue.style.verticalAlign = 'middle';
+          amountValue.style.textAlign = 'left';
+          amountValue.style.height = '28px';
+          amountValue.style.lineHeight = '28px';
+          amountValue.style.color = '#00AA9D';
+          amountValue.style.paddingLeft = '8px';
+          amountValue.style.paddingRight = '12px';
+          amountValue.style.boxSizing = 'border-box';
+        }
+
+        // Helper to sanitize modern color formats (lab/oklch) that html2canvas cannot parse
+        const dummyCanvas = clonedDoc.createElement('canvas');
+        dummyCanvas.width = 1;
+        dummyCanvas.height = 1;
+        const ctx = dummyCanvas.getContext('2d');
+
+        const toStandardRgb = (val: string | null | undefined): string => {
+          if (!val) return '';
+          if (val.includes('lab') || val.includes('oklch') || val.includes('color(')) {
+            if (ctx) {
+              ctx.fillStyle = '#000000';
+              ctx.fillStyle = val;
+              return ctx.fillStyle;
+            }
+            return '#0f172a';
+          }
+          return val;
+        };
+
+        const allNodes = [card, ...Array.from(card.querySelectorAll('*'))] as HTMLElement[];
+        for (const node of allNodes) {
+          if (!node.style) continue;
+          const computed = clonedDoc.defaultView?.getComputedStyle(node) || window.getComputedStyle(node);
+          
+          const color = toStandardRgb(computed.color);
+          const bg = toStandardRgb(computed.backgroundColor);
+          const borderTop = toStandardRgb(computed.borderTopColor);
+          const borderRight = toStandardRgb(computed.borderRightColor);
+          const borderBottom = toStandardRgb(computed.borderBottomColor);
+          const borderLeft = toStandardRgb(computed.borderLeftColor);
+
+          if (color) node.style.color = color;
+          if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') node.style.backgroundColor = bg;
+          if (borderTop) node.style.borderTopColor = borderTop;
+          if (borderRight) node.style.borderRightColor = borderRight;
+          if (borderBottom) node.style.borderBottomColor = borderBottom;
+          if (borderLeft) node.style.borderLeftColor = borderLeft;
+        }
+      },
+    });
+  };
+
   // Generate high-resolution PDF download: EXACTLY 1 page, named receipt number e.g. "TH0009.pdf"
   const handleDownloadPDF = async () => {
     if (!receipt || !receiptRef.current) return;
@@ -161,135 +290,8 @@ ${header.trustName}`);
 
     try {
       const element = receiptRef.current;
-
-      // Capture receipt card at crisp high resolution matching A5 proportions
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        onclone: (clonedDoc) => {
-          const card = clonedDoc.getElementById('printable-receipt-card');
-          if (!card) return;
-          card.style.boxShadow = 'none';
-          card.style.transform = 'none';
-          card.style.margin = '0 auto';
-          card.style.width = '560px';
-          card.style.height = '794px';
-          card.style.minWidth = '560px';
-          card.style.minHeight = '794px';
-          card.style.maxWidth = '560px';
-          card.style.maxHeight = '794px';
-
-          let p = card.parentElement;
-          while (p && p !== clonedDoc.body) {
-            p.style.transform = 'none';
-            p.style.overflow = 'visible';
-            p.style.width = 'auto';
-            p.style.height = 'auto';
-            p.style.margin = '0';
-            p = p.parentElement;
-          }
-
-          // Enforce exact AMOUNT capsule metrics in html2canvas to guarantee identical concentric alignment
-          const amountRow = card.querySelector('#receipt-amount-row') as HTMLElement | null;
-          if (amountRow) {
-            amountRow.style.display = 'flex';
-            amountRow.style.alignItems = 'center';
-            amountRow.style.paddingTop = '2px';
-          }
-          const amountLabel = card.querySelector('#receipt-amount-label') as HTMLElement | null;
-          if (amountLabel) {
-            amountLabel.style.height = '32px';
-            amountLabel.style.lineHeight = '32px';
-            amountLabel.style.marginRight = '12px';
-            amountLabel.style.display = 'inline-flex';
-            amountLabel.style.alignItems = 'center';
-          }
-          const amountContainer = card.querySelector('#receipt-amount-badge-container') as HTMLElement | null;
-          if (amountContainer) {
-            amountContainer.style.height = '32px';
-            amountContainer.style.minHeight = '32px';
-            amountContainer.style.maxHeight = '32px';
-            amountContainer.style.display = 'inline-flex';
-            amountContainer.style.alignItems = 'center';
-            amountContainer.style.padding = '2px';
-            amountContainer.style.borderRadius = '16px';
-            amountContainer.style.backgroundColor = '#EEEEEE';
-            amountContainer.style.boxSizing = 'border-box';
-          }
-          const currencyBadge = card.querySelector('#receipt-currency-badge') as HTMLElement | null;
-          if (currencyBadge) {
-            currencyBadge.style.height = '28px';
-            currencyBadge.style.minHeight = '28px';
-            currencyBadge.style.maxHeight = '28px';
-            currencyBadge.style.lineHeight = '28px';
-            currencyBadge.style.borderRadius = '14px';
-            currencyBadge.style.display = 'inline-flex';
-            currencyBadge.style.alignItems = 'center';
-            currencyBadge.style.justifyContent = 'center';
-            currencyBadge.style.backgroundColor = '#0075BF';
-            currencyBadge.style.color = '#FFFFFF';
-            currencyBadge.style.paddingLeft = '14px';
-            currencyBadge.style.paddingRight = '14px';
-            currencyBadge.style.boxSizing = 'border-box';
-            currencyBadge.style.verticalAlign = 'middle';
-          }
-          const amountValue = card.querySelector('#receipt-amount-value') as HTMLElement | null;
-          if (amountValue) {
-            amountValue.style.height = '28px';
-            amountValue.style.minHeight = '28px';
-            amountValue.style.maxHeight = '28px';
-            amountValue.style.lineHeight = '28px';
-            amountValue.style.display = 'inline-flex';
-            amountValue.style.alignItems = 'center';
-            amountValue.style.color = '#00AA9D';
-            amountValue.style.paddingLeft = '8px';
-            amountValue.style.paddingRight = '12px';
-            amountValue.style.boxSizing = 'border-box';
-            amountValue.style.verticalAlign = 'middle';
-          }
-
-          // Helper to sanitize modern color formats (lab/oklch) that html2canvas cannot parse
-          const dummyCanvas = clonedDoc.createElement('canvas');
-          dummyCanvas.width = 1;
-          dummyCanvas.height = 1;
-          const ctx = dummyCanvas.getContext('2d');
-
-          const toStandardRgb = (val: string | null | undefined): string => {
-            if (!val) return '';
-            if (val.includes('lab') || val.includes('oklch') || val.includes('color(')) {
-              if (ctx) {
-                ctx.fillStyle = '#000000';
-                ctx.fillStyle = val;
-                return ctx.fillStyle;
-              }
-              return '#0f172a';
-            }
-            return val;
-          };
-
-          const allNodes = [card, ...Array.from(card.querySelectorAll('*'))] as HTMLElement[];
-          for (const node of allNodes) {
-            if (!node.style) continue;
-            const computed = clonedDoc.defaultView?.getComputedStyle(node) || window.getComputedStyle(node);
-            
-            const color = toStandardRgb(computed.color);
-            const bg = toStandardRgb(computed.backgroundColor);
-            const borderTop = toStandardRgb(computed.borderTopColor);
-            const borderRight = toStandardRgb(computed.borderRightColor);
-            const borderBottom = toStandardRgb(computed.borderBottomColor);
-            const borderLeft = toStandardRgb(computed.borderLeftColor);
-
-            if (color) node.style.color = color;
-            if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') node.style.backgroundColor = bg;
-            if (borderTop) node.style.borderTopColor = borderTop;
-            if (borderRight) node.style.borderRightColor = borderRight;
-            if (borderBottom) node.style.borderBottomColor = borderBottom;
-            if (borderLeft) node.style.borderLeftColor = borderLeft;
-          }
-        },
-      });
+      const canvas = await generateReceiptCanvas(element);
+      if (!canvas) return;
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -299,8 +301,6 @@ ${header.trustName}`);
       });
 
       // Fit strictly within single A5 page (148mm × 210mm) full bleed
-      // The card's internal padding directly forms the exact margins of the A5 document,
-      // guaranteeing that what is seen on the site is 100% identical on the downloaded PDF!
       pdf.addImage(imgData, 'PNG', 0, 0, 148, 210, undefined, 'FAST');
 
       // Filename strictly receipt number e.g. "TH0009.pdf" matching tab in user's image
@@ -311,6 +311,30 @@ ${header.trustName}`);
       handlePrint();
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Generate high-resolution JPEG image download: 3x resolution crisp image e.g. "TH0009.jpg"
+  const handleDownloadJPEG = async () => {
+    if (!receipt || !receiptRef.current) return;
+    setIsExportingJPEG(true);
+
+    try {
+      const element = receiptRef.current;
+      const canvas = await generateReceiptCanvas(element);
+      if (!canvas) return;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `${displayReceiptNo.replace('-', '')}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('JPEG generation error:', err);
+    } finally {
+      setIsExportingJPEG(false);
     }
   };
 
@@ -422,12 +446,24 @@ ${header.trustName}`);
             <button
               onClick={handleDownloadPDF}
               disabled={isExporting}
-              aria-label={`Export A5 PDF for receipt ${receipt.receiptNo}`}
-              className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-[#00a896] to-[#0284c7] hover:from-[#009688] hover:to-[#0369a1] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none cursor-pointer disabled:opacity-50"
-              title={`Download A5 PDF as ${displayReceiptNo.replace('-', '')}.pdf`}
+              aria-label={`Export PDF for receipt ${receipt.receiptNo}`}
+              className="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-[#00a896] to-[#0284c7] hover:from-[#009688] hover:to-[#0369a1] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none cursor-pointer disabled:opacity-50"
+              title={`Download PDF as ${displayReceiptNo.replace('-', '')}.pdf`}
             >
               <Download className="w-4 h-4 shrink-0" />
-              <span>{isExporting ? 'Exporting...' : 'Export PDF (A5)'}</span>
+              <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+            </button>
+
+            {/* Export JPEG Button */}
+            <button
+              onClick={handleDownloadJPEG}
+              disabled={isExportingJPEG}
+              aria-label={`Export JPEG for receipt ${receipt.receiptNo}`}
+              className="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#6366f1] hover:from-[#0369a1] hover:to-[#4f46e5] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none cursor-pointer disabled:opacity-50"
+              title={`Download JPEG image as ${displayReceiptNo.replace('-', '')}.jpg`}
+            >
+              <FileImage className="w-4 h-4 shrink-0" />
+              <span>{isExportingJPEG ? 'Exporting...' : 'Export JPEG'}</span>
             </button>
 
             {/* WhatsApp Share Button */}
