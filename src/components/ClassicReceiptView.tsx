@@ -19,6 +19,7 @@ import {
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadHeaderSettings, OrganizationHeaderSettings } from '@/lib/settingsStorage';
+import { DEFAULT_RECEIPT_EMAILS } from '@/lib/constants';
 
 interface ClassicReceiptViewProps {
   receipt: ClassicReceipt | null;
@@ -68,6 +69,9 @@ export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingJPEG, setIsExportingJPEG] = useState(false);
+  const [selectedDispatchEmail, setSelectedDispatchEmail] = useState<string>(
+    () => receipt?.donorEmail || DEFAULT_RECEIPT_EMAILS[0]
+  );
   const [header, setHeader] = useState<OrganizationHeaderSettings>(() => loadHeaderSettings());
   // Template Style: 'modern' (Image 2 - default) vs 'classic' (Image 1 - 80G border)
   const [templateStyle, setTemplateStyle] = useState<'modern' | 'classic'>('modern');
@@ -103,10 +107,11 @@ export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }
     };
   }, [receipt, templateStyle, zoomMode]);
 
-  // Reload header settings whenever receipt modal opens
+  // Reload header settings and sync dispatch email whenever receipt modal opens
   useEffect(() => {
     if (receipt) {
       setHeader(loadHeaderSettings());
+      setSelectedDispatchEmail(receipt.donorEmail || DEFAULT_RECEIPT_EMAILS[0]);
     }
   }, [receipt]);
 
@@ -130,29 +135,54 @@ export function ClassicReceiptView({ receipt, onClose, onEdit, autoDownloadPDF }
     };
   }, [receipt]);
 
-  // Dispatch via Email
-  const handleSendEmail = () => {
+  // Dispatch via Email with auto-downloaded PDF for easy attachment
+  const handleSendEmail = async () => {
     if (!receipt) return;
 
-    const subject = encodeURIComponent(`Official Donation Receipt ${receipt.receiptNo} - ${header.trustName}`);
-    const body = encodeURIComponent(`Dear ${receipt.donorName},
+    const targetEmail = selectedDispatchEmail || receipt.donorEmail || DEFAULT_RECEIPT_EMAILS[0];
+    const serial = formatReceiptSerial(receipt.receiptNo);
+    const subject = encodeURIComponent(`Official Donation Receipt ${serial} - ${receipt.donorName} (${receipt.currency} ${receipt.donationAmount})`);
+    const body = encodeURIComponent(`Dear Team,
 
-Thank you for your generous contribution to ${header.trustName}.
+Please find the official donation receipt particulars for ${receipt.donorName}:
 
 RECEIPT DETAILS:
 ----------------------------------------
-Receipt No: ${receipt.receiptNo}
+Receipt No: ${serial}
 Date: ${formatReceiptDate(receipt.date)}
+Donor: ${receipt.donorName}
 Donation Amount: ${receipt.currency} ${receipt.donationAmount.toLocaleString('en-US')}
 Amount in Words: ${receipt.amountInWords}
 Towards a Donation for the: ${receipt.purpose}
 ${receipt.paymentMethod ? `Payment Mode: ${receipt.paymentMethod}` : ''}
 
-With sincere gratitude,
-President
-${header.trustName}`);
+_Please find the attached official receipt PDF (${serial.replace('-', '')}.pdf)._
 
-    const mailto = `mailto:${receipt.donorEmail || ''}?subject=${subject}&body=${body}`;
+With sincere gratitude,
+${header.trustName}
+${header.website || 'www.thaibaheritage.com'}`);
+
+    // Auto-download PDF so the user has the file ready to attach to their email
+    try {
+      if (receiptRef.current) {
+        const element = receiptRef.current;
+        const canvas = await generateReceiptCanvas(element);
+        if (canvas) {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a5',
+          });
+          pdf.addImage(imgData, 'PNG', 0, 0, 148, 210, undefined, 'FAST');
+          pdf.save(`${serial.replace('-', '')}.pdf`);
+        }
+      }
+    } catch (e) {
+      console.error('PDF auto-download before email dispatch error:', e);
+    }
+
+    const mailto = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
     window.location.href = mailto;
   };
 
@@ -477,16 +507,35 @@ ${header.trustName}`);
               <span className="inline">WhatsApp</span>
             </button>
 
-            {/* Email Dispatch Button */}
-            <button
-              onClick={handleSendEmail}
-              aria-label={`Dispatch receipt ${receipt.receiptNo} via Email`}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer"
-              title="Dispatch via Email"
-            >
-              <Mail className="w-3.5 h-3.5 shrink-0" />
-              <span className="inline">Email</span>
-            </button>
+            {/* Email Dispatch Control with Dropdown */}
+            <div className="inline-flex items-center bg-blue-500/15 border border-blue-500/30 rounded-xl p-0.5 min-h-[40px]">
+              <button
+                onClick={handleSendEmail}
+                aria-label={`Dispatch receipt PDF to ${selectedDispatchEmail}`}
+                className="px-3 py-2 rounded-lg bg-blue-500/30 hover:bg-blue-500/40 text-blue-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer"
+                title={`Send receipt PDF to ${selectedDispatchEmail}`}
+              >
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                <span>Email</span>
+              </button>
+              <select
+                value={selectedDispatchEmail}
+                onChange={(e) => setSelectedDispatchEmail(e.target.value)}
+                className="bg-transparent text-blue-100 text-[11px] font-semibold px-2 py-1.5 focus:outline-none cursor-pointer border-l border-blue-500/20 max-w-[130px] sm:max-w-[170px] truncate"
+                title={`Selected Destination Email: ${selectedDispatchEmail}`}
+              >
+                {DEFAULT_RECEIPT_EMAILS.map((em) => (
+                  <option key={em} value={em} className="bg-[#141822] text-white">
+                    {em}
+                  </option>
+                ))}
+                {selectedDispatchEmail && !DEFAULT_RECEIPT_EMAILS.includes(selectedDispatchEmail as any) && (
+                  <option value={selectedDispatchEmail} className="bg-[#141822] text-white">
+                    {selectedDispatchEmail}
+                  </option>
+                )}
+              </select>
+            </div>
 
             {/* Print Button */}
             <button

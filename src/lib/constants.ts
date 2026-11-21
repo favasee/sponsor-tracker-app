@@ -64,6 +64,14 @@ export const REMINDER_FREQUENCIES = [
   'One-time',
 ] as const;
 
+export const DEFAULT_RECEIPT_EMAILS = [
+  'accounts@thaibagarden.com',
+  'thaibaadvertisement@gmail.com',
+  'itfundest@gmail.com',
+  'tmsfinancial313@gmail.com',
+  'moraledu@thaibagarden.com',
+] as const;
+
 export const DEFAULT_TEMPLATES: WhatsAppTemplate[] = [
   // English
   {

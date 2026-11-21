@@ -44,6 +44,7 @@ import {
 import confetti from 'canvas-confetti';
 import { GroupSubmissionView } from './GroupSubmissionView';
 import { generateWhatsAppMessage } from '@/lib/whatsapp';
+import { DEFAULT_RECEIPT_EMAILS } from '@/lib/constants';
 
 interface ReceiptFormProps {
   receipts: ClassicReceipt[];
@@ -88,7 +89,7 @@ export function ReceiptForm({
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]); // Default Date is today
   const [donorName, setDonorName] = useState('');
   const [donorPhone, setDonorPhone] = useState('');
-  const [donorEmail, setDonorEmail] = useState('');
+  const [donorEmail, setDonorEmail] = useState<string>(DEFAULT_RECEIPT_EMAILS[0]);
   const [donorAddress, setDonorAddress] = useState('');
   const [donorPAN, setDonorPAN] = useState('');
   const [donationAmount, setDonationAmount] = useState<string>('');
@@ -134,7 +135,7 @@ export function ReceiptForm({
       setDate(receiptToEdit.date);
       setDonorName(receiptToEdit.donorName);
       setDonorPhone(receiptToEdit.donorPhone || '');
-      setDonorEmail(receiptToEdit.donorEmail || '');
+      setDonorEmail(receiptToEdit.donorEmail || DEFAULT_RECEIPT_EMAILS[0]);
       setDonorAddress(receiptToEdit.donorAddress || '');
       setDonorPAN(receiptToEdit.donorPAN || '');
       setDonationAmount(receiptToEdit.donationAmount ? receiptToEdit.donationAmount.toString() : '');
@@ -166,7 +167,7 @@ export function ReceiptForm({
       setDate(new Date().toISOString().split('T')[0]); // Default Date is Today
       setDonorName('');
       setDonorPhone('');
-      setDonorEmail('');
+      setDonorEmail(DEFAULT_RECEIPT_EMAILS[0]);
       setDonorAddress('');
       setDonorPAN('');
       setDonationAmount('');
@@ -305,7 +306,7 @@ export function ReceiptForm({
       date: date || new Date().toISOString().split('T')[0],
       donorName: donorName.trim(),
       donorPhone: donorPhone.trim() || undefined,
-      donorEmail: donorEmail.trim() || undefined,
+      donorEmail: donorEmail.trim() || DEFAULT_RECEIPT_EMAILS[0],
       donorAddress: donorAddress.trim() || undefined,
       donorPAN: donorPAN.trim().toUpperCase() || undefined,
       purpose: finalPurpose,
@@ -526,11 +527,11 @@ export function ReceiptForm({
 
           <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* ROW 1: Receipt Date & Donor Name */}
+        {/* ROW 1: Receipt Date & Receipt Mail */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-5">
           
           {/* Default Date (defaults to today) */}
-          <div className="sm:col-span-4">
+          <div className="sm:col-span-5">
             <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
               Receipt Date *
             </label>
@@ -546,36 +547,72 @@ export function ReceiptForm({
             </span>
           </div>
 
-          {/* Change 1: Donor Name with NO "e.g." */}
-          <div className="sm:col-span-8 relative">
+          {/* Receipt Mail Dropdown (After Date) - Default: accounts@thaibagarden.com */}
+          <div className="sm:col-span-7">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Donor Full Name *
+                Receipt Mail (Send PDF) *
               </label>
-              {templates.length > 0 && (
-                <button
-                  type="button"
-                  onClick={onOpenTemplatesModal}
-                  className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none rounded px-1"
-                >
-                  <Bookmark className="w-3 h-3" />
-                  <span>Templates ({templates.length})</span>
-                </button>
-              )}
+              <span className="text-[10px] text-teal-400 font-bold">
+                PDF Dispatch Destination
+              </span>
             </div>
+            <div className="relative">
+              <select
+                value={donorEmail}
+                onChange={(e) => setDonorEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-[#141822] border border-white/10 text-white text-xs sm:text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none focus:border-amber-400/50 transition appearance-none cursor-pointer pr-10"
+              >
+                {DEFAULT_RECEIPT_EMAILS.map((email) => (
+                  <option key={email} value={email} className="bg-[#141822] text-white py-1">
+                    {email} {email === 'accounts@thaibagarden.com' ? '(Default)' : ''}
+                  </option>
+                ))}
+                {donorEmail && !DEFAULT_RECEIPT_EMAILS.includes(donorEmail as any) && (
+                  <option value={donorEmail} className="bg-[#141822] text-white py-1">
+                    {donorEmail} (Custom)
+                  </option>
+                )}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <span className="text-[10px] text-slate-500 mt-1 block">
+              Default recipient for email dispatch with PDF receipt attached
+            </span>
+          </div>
 
-            <input
-              type="text"
-              required
-              value={donorName}
-              onChange={(e) => {
-                setDonorName(e.target.value);
-                setShowTemplateDropdown(true);
-              }}
-              onFocus={() => setShowTemplateDropdown(true)}
-              placeholder="Donor Full Name"
-              className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-sm font-bold placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none focus:border-amber-400/50 focus:bg-white/[0.07] transition"
-            />
+        </div>
+
+        {/* ROW 2: Donor Full Name */}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Donor Full Name *
+            </label>
+            {templates.length > 0 && (
+              <button
+                type="button"
+                onClick={onOpenTemplatesModal}
+                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none rounded px-1"
+              >
+                <Bookmark className="w-3 h-3" />
+                <span>Templates ({templates.length})</span>
+              </button>
+            )}
+          </div>
+
+          <input
+            type="text"
+            required
+            value={donorName}
+            onChange={(e) => {
+              setDonorName(e.target.value);
+              setShowTemplateDropdown(true);
+            }}
+            onFocus={() => setShowTemplateDropdown(true)}
+            placeholder="Donor Full Name"
+            className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-sm font-bold placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none focus:border-amber-400/50 focus:bg-white/[0.07] transition"
+          />
 
             {/* Recurring Donor Autocomplete Dropdown */}
             {showTemplateDropdown && matchingTemplates.length > 0 && (
@@ -603,8 +640,6 @@ export function ReceiptForm({
               </div>
             )}
           </div>
-
-        </div>
 
         {/* ROW 2: Currency, Amount & Indian Value */}
         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
@@ -785,7 +820,7 @@ export function ReceiptForm({
               <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                 Optional Donor Details (WhatsApp Phone, Email, PAN)
               </span>
-              {(donorPhone || donorEmail || donorPAN) && !showDonorContactDetails && (
+              {(donorPhone || (donorEmail && !DEFAULT_RECEIPT_EMAILS.includes(donorEmail as any)) || donorPAN) && !showDonorContactDetails && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   Filled
                 </span>
@@ -813,13 +848,13 @@ export function ReceiptForm({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Donor Email (Optional)
+                  Custom / Alternate Email
                 </label>
                 <input
                   type="email"
                   value={donorEmail}
                   onChange={(e) => setDonorEmail(e.target.value)}
-                  placeholder="donor@example.com"
+                  placeholder="custom@thaiba.org"
                   className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none focus:border-amber-400/50 transition"
                 />
               </div>
